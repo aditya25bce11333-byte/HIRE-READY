@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interview — HireReady</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <style>
+    .anti-cheat-warn {
+      position:fixed;top:80px;left:50%;transform:translateX(-50%);
+      background:rgba(239,68,68,0.95);color:#fff;
+      padding:12px 24px;border-radius:var(--radius-md);
+      font-weight:700;z-index:9999;
+      animation:slideInDown 0.3s ease;
+      display:none;
+    }
+    @keyframes slideInDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    .filler-chip{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:2px 8px;border-radius:100px;
+      background:rgba(245,158,11,0.15);color:var(--yellow);
+      font-size:0.72rem;font-weight:600;
+      border:1px solid rgba(245,158,11,0.3);
+      margin:2px;
+    }
+    .coding-panel{display:none;}
+    .coding-panel.active{display:block;}
+    .tab-btn{
+      padding:7px 16px;background:var(--surface-2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;
+      cursor:pointer;color:var(--text-2);transition:all var(--transition);
+    }
+    .tab-btn.active{background:var(--brand-glow);border-color:var(--brand);color:var(--brand-light);}
+    .msg-timestamp{font-size:0.68rem;color:var(--text-3);margin-top:4px;}
+    .typing-indicator{display:flex;gap:4px;align-items:center;padding:8px 0;}
+    .typing-dot{width:7px;height:7px;background:var(--text-3);border-radius:50%;animation:typingBounce 1.2s infinite;}
+    .typing-dot:nth-child(2){animation-delay:0.2s;}
+    .typing-dot:nth-child(3){animation-delay:0.4s;}
+    @keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="anti-cheat-warn" id="ac-warn">⚠️ Tab switching detected! This will be flagged.</div>
+
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+    <main class="main-content" style="padding-bottom:0;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Interview Simulation Layer</div>
+          <div class="page-subtitle">Core engine with roles, rounds, and intelligent dynamics</div>
+        </div>
+        <div class="flex gap-2 items-center">
+          <span class="badge badge-green" id="status-badge">● Ready</span>
+          <div class="flex gap-2">
+            <button class="tab-btn active" id="tab-chat" onclick="switchTab('chat')">💬 Interview</button>
+            <button class="tab-btn" id="tab-code" onclick="switchTab('code')">💻 Coding</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="interview-layout" style="height:calc(100vh - 200px);">
+        <!-- CHAT PANEL -->
+        <div class="chat-panel" id="chat-panel">
+          <div class="chat-header">
+            <div class="ai-avatar">🤖</div>
+            <div>
+              <div style="font-weight:700;font-size:0.95rem;">AI Interviewer</div>
+              <div style="font-size:0.78rem;color:var(--green);" id="round-status">● Configure settings and start</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+              <span class="badge badge-yellow" id="timer-badge">⏱ 00:00</span>
+              <button class="btn btn-danger btn-sm" id="end-btn" onclick="endInterview()" disabled>End</button>
+            </div>
+          </div>
+
+          <div class="chat-messages" id="chat-messages">
+            <div class="message ai">
+              <div class="msg-avatar ai">🤖</div>
+              <div>
+                <div class="msg-bubble">
+                  Hello! I'm your AI interviewer. Configure your settings on the right, then click <strong>Start Interview</strong> when you're ready. I'll adapt my questions to your role, difficulty level, and resume.
+                </div>
+                <div class="msg-timestamp">Just now</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filler word detection display -->
+          <div id="filler-bar" style="padding:8px 20px;border-top:1px solid var(--border);display:none;background:var(--surface-2);">
+            <span style="font-size:0.75rem;color:var(--text-3);">🗣️ Filler words detected: </span>
+            <span id="filler-chips"></span>
+          </div>
+
+          <div class="chat-input-area">
+            <textarea class="chat-input" id="user-input" rows="2"
+              placeholder="Type your answer here... (Enter to send, Shift+Enter for new line)"
+              disabled></textarea>
+            <button class="btn btn-primary" id="send-btn" onclick="sendMsg()" disabled>Send</button>
+          </div>
+        </div>
+
+        <!-- CODING PANEL -->
+        <div class="coding-panel" id="code-panel" style="display:none;flex-direction:column;gap:16px;">
+          <div class="card" style="flex:1;display:flex;flex-direction:column;">
+            <div class="flex items-center justify-between mb-4">
+              <h3 style="font-size:0.95rem;font-weight:700;">💻 Coding Sandbox</h3>
+              <div class="flex gap-2">
+                <select class="form-select" id="code-lang" style="width:120px;padding:6px 10px;">
+                  <option value="python">Python</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="java">Java</option>
+                  <option value="cpp">C++</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="submitCode()">▶ Submit & Review</button>
+              </div>
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-2);margin-bottom:12px;" id="code-question">
+              📝 No coding question yet. Start an interview first and ask for a coding problem.
+            </div>
+            <div class="code-editor-container" style="flex:1;">
+              <div class="code-editor-bar">
+                <div class="code-dot" style="background:#ff5f56;"></div>
+                <div class="code-dot" style="background:#ffbd2e;"></div>
+                <div class="code-dot" style="background:#27c93f;"></div>
+                <span style="font-size:0.75rem;color:#888;margin-left:8px;" id="lang-label">main.py</span>
+              </div>
+              <textarea class="code-editor" id="code-editor"
+                placeholder="# Write your code here...&#10;def solution():&#10;    pass"
+                spellcheck="false"></textarea>
+            </div>
+          </div>
+
+          <div class="card" id="review-card" style="display:none;">
+            <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:10px;">🤖 AI Code Review</h4>
+            <div id="review-content" style="font-size:0.875rem;color:var(--text-2);line-height:1.7;"></div>
+          </div>
+        </div>
+
+        <!-- SIDE PANEL -->
+        <div class="side-panel">
+          <!-- Setup Card -->
+          <div class="panel-card" id="setup-card">
+            <h4>🎯 Interview Setup</h4>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Role</label>
+                <div class="role-pills" id="role-pills">
+                  <div class="role-pill active" data-role="SDE">SDE</div>
+                  <div class="role-pill" data-role="Data Scientist">Data Sci</div>
+                  <div class="role-pill" data-role="DevOps">DevOps</div>
+                  <div class="role-pill" data-role="PM">PM</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Difficulty</label>
+                <select class="form-select" id="difficulty-sel">
+                  <option value="Easy">Easy</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rounds</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;">
+                    <input type="checkbox" id="r-tech" checked> Technical
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;">
+                    <input type="checkbox" id="r-hr" checked> HR
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row" style="padding:8px 0;border-bottom:none;">
+                <div class="settings-row-info">
+                  <h4 style="font-size:0.82rem;">⚡ Pressure Mode</h4>
+                  <p style="font-size:0.72rem;">Interruptions & time pressure</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="pressure-toggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <button class="btn btn-primary w-full" id="start-btn" onclick="startInterview()" style="justify-content:center;">
+                ▶ Start Interview
+              </button>
+            </div>
+          </div>
+
+          <!-- Timer Card -->
+          <div class="panel-card" id="timer-card" style="display:none;">
+            <h4>⏱️ Session Timer</h4>
+            <div class="timer-display" id="timer-val">00:00</div>
+            <div style="font-size:0.75rem;color:var(--text-3);text-align:center;margin-top:6px;" id="round-label">Technical Round</div>
+          </div>
+
+          <!-- Anti-cheat card -->
+          <div class="panel-card" id="ac-card" style="display:none;">
+            <h4>🔒 Integrity Monitor</h4>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-muted">Tab Switches</span>
+                <span class="badge badge-green" id="ac-tabs">0</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-muted">Paste Attempts</span>
+                <span class="badge badge-green" id="ac-paste">0</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-muted">Status</span>
+                <span class="badge badge-green" id="ac-status">Clean</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats card -->
+          <div class="panel-card" id="stats-card" style="display:none;">
+            <h4>📊 Live Stats</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <div class="flex items-center justify-between mb-4" style="margin-bottom:4px;">
+                  <span class="text-xs text-muted">Messages</span>
+                  <span class="text-xs font-bold" id="stat-msgs">0</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:4px;">
+                  <span class="text-xs text-muted">Filler Words</span>
+                  <span class="text-xs font-bold text-yellow" id="stat-fillers">0</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:4px;">
+                  <span class="text-xs text-muted">Avg Response</span>
+                  <span class="text-xs font-bold" id="stat-avglen">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error();
+    document.getElementById('navbar-root').innerHTML = buildNavbar('interview');
+    document.getElementById('sidebar-root').innerHTML = buildSidebar('interview');
+
+    // ── State ──────────────────────────────────────────────────────
+    let sessionId = null;
+    let timerInterval = null;
+    let seconds = 0;
+    let msgCount = 0;
+    let totalFillers = 0;
+    let totalResponseLen = 0;
+    let tabSwitches = 0;
+    let pasteAttempts = 0;
+    let isRunning = false;
+    let selectedRole = 'SDE';
+
+    // Pre-set from URL params
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('role')) {
+      selectedRole = params.get('role');
+      document.querySelectorAll('.role-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.role === selectedRole);
+      });
+    }
+    if (params.get('difficulty')) document.getElementById('difficulty-sel').value = params.get('difficulty');
+    if (params.get('pressure') === 'true') document.getElementById('pressure-toggle').checked = true;
+
+    // Role pill selection
+    document.querySelectorAll('.role-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        selectedRole = pill.dataset.role;
+      });
+    });
+
+    // ── Tab switch ─────────────────────────────────────────────────
+    document.addEventListener('visibilitychange', () => {
+      if (!isRunning) return;
+      if (document.hidden) {
+        tabSwitches++;
+        document.getElementById('ac-tabs').textContent = tabSwitches;
+        document.getElementById('ac-tabs').className = tabSwitches >= 2 ? 'badge badge-red' : 'badge badge-yellow';
+        if (tabSwitches >= 2) {
+          document.getElementById('ac-status').textContent = 'Flagged';
+          document.getElementById('ac-status').className = 'badge badge-red';
+        }
+        showWarn('⚠️ Tab switching detected! This will be flagged.');
+        reportAntiCheat('tab-switch');
+      }
+    });
+
+    // Paste detection
+    document.addEventListener('paste', (e) => {
+      if (!isRunning || e.target.id !== 'user-input') return;
+      pasteAttempts++;
+      document.getElementById('ac-paste').textContent = pasteAttempts;
+      document.getElementById('ac-paste').className = pasteAttempts >= 2 ? 'badge badge-red' : 'badge badge-yellow';
+      showWarn('⚠️ Paste detected in interview chat!');
+      reportAntiCheat('paste');
+    });
+
+    function showWarn(msg) {
+      const w = document.getElementById('ac-warn');
+      w.textContent = msg;
+      w.style.display = 'block';
+      setTimeout(() => w.style.display = 'none', 3500);
+    }
+
+    async function reportAntiCheat(event) {
+      if (!sessionId) return;
+      try { await api.post('/interview/anti-cheat', { sessionId, event }); } catch {}
+    }
+
+    // ── Timer ──────────────────────────────────────────────────────
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        seconds++;
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        const t = `${m}:${s}`;
+        document.getElementById('timer-val').textContent = t;
+        document.getElementById('timer-badge').textContent = `⏱ ${t}`;
+      }, 1000);
+    }
+
+    // ── Chat ───────────────────────────────────────────────────────
+    function addMessage(role, content, fillerWords = []) {
+      const user = Auth.getUser();
+      const initials = user ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const msgEl = document.createElement('div');
+      msgEl.className = `message ${role} fade-in`;
+
+      if (role === 'ai') {
+        msgEl.innerHTML = `
+          <div class="msg-avatar ai">🤖</div>
+          <div>
+            <div class="msg-bubble">${content}</div>
+            <div class="msg-timestamp">${now}</div>
+          </div>`;
+      } else {
+        msgEl.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:flex-end;">
+            <div class="msg-bubble">${content}</div>
+            ${fillerWords.length ? `<div class="msg-timestamp" style="color:var(--yellow);">⚠️ Filler words: ${fillerWords.join(', ')}</div>` : ''}
+            <div class="msg-timestamp">${now}</div>
+          </div>
+          <div class="msg-avatar user">${initials}</div>`;
+      }
+
+      const container = document.getElementById('chat-messages');
+      container.appendChild(msgEl);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showTyping() {
+      const container = document.getElementById('chat-messages');
+      const el = document.createElement('div');
+      el.className = 'message ai';
+      el.id = 'typing-indicator';
+      el.innerHTML = `
+        <div class="msg-avatar ai">🤖</div>
+        <div class="msg-bubble" style="background:var(--surface-2);">
+          <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>`;
+      container.appendChild(el);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function hideTyping() {
+      document.getElementById('typing-indicator')?.remove();
+    }
+
+    // ── Start ──────────────────────────────────────────────────────
+    async function startInterview() {
+      const btn = document.getElementById('start-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Starting...';
+
+      const rounds = [];
+      if (document.getElementById('r-tech').checked) rounds.push('Technical');
+      if (document.getElementById('r-hr').checked) rounds.push('HR');
+      if (!rounds.length) rounds.push('Technical');
+
+      try {
+        const data = await api.post('/interview/start', {
+          role: selectedRole,
+          difficulty: document.getElementById('difficulty-sel').value,
+          pressureMode: document.getElementById('pressure-toggle').checked,
+          rounds,
+        });
+
+        sessionId = data.sessionId;
+        isRunning = true;
+
+        // Clear and add opening message
+        document.getElementById('chat-messages').innerHTML = '';
+        addMessage('ai', data.message);
+
+        // Update UI
+        document.getElementById('setup-card').style.display = 'none';
+        document.getElementById('timer-card').style.display = 'block';
+        document.getElementById('ac-card').style.display = 'block';
+        document.getElementById('stats-card').style.display = 'block';
+        document.getElementById('end-btn').disabled = false;
+        document.getElementById('user-input').disabled = false;
+        document.getElementById('send-btn').disabled = false;
+        document.getElementById('round-status').textContent = `● ${rounds[0]} Round — ${selectedRole}`;
+        document.getElementById('round-label').textContent = `${rounds[0]} Round`;
+        document.getElementById('status-badge').textContent = '● Live';
+        document.getElementById('status-badge').className = 'badge badge-green';
+
+        startTimer();
+        document.getElementById('user-input').focus();
+        Toast.success('Interview started! Good luck 🎯');
+
+        if (document.getElementById('pressure-toggle').checked) {
+          Toast.info('⚡ Pressure Mode active — expect interruptions!');
+        }
+      } catch (err) {
+        Toast.error(err.message);
+        btn.disabled = false;
+        btn.textContent = '▶ Start Interview';
+        document.getElementById('setup-card').style.display = 'block';
+      }
+    }
+
+    // ── Send Message ───────────────────────────────────────────────
+    async function sendMsg() {
+      const input = document.getElementById('user-input');
+      const content = input.value.trim();
+      if (!content || !sessionId) return;
+
+      const sendBtn = document.getElementById('send-btn');
+      sendBtn.disabled = true;
+      input.disabled = true;
+      input.value = '';
+
+      addMessage('user', content);
+      msgCount++;
+      totalResponseLen += content.length;
+      document.getElementById('stat-msgs').textContent = msgCount;
+      document.getElementById('stat-avglen').textContent = Math.round(totalResponseLen / msgCount) + ' ch';
+
+      showTyping();
+
+      try {
+        const data = await api.post('/interview/message', { sessionId, content });
+        hideTyping();
+        addMessage('ai', data.message);
+
+        // Filler words
+        if (data.fillerWords?.length) {
+          totalFillers += data.fillerWords.length;
+          document.getElementById('stat-fillers').textContent = totalFillers;
+          document.getElementById('filler-bar').style.display = 'block';
+          const chips = document.getElementById('filler-chips');
+          chips.innerHTML = data.fillerWords.map(w => `<span class="filler-chip">${w}</span>`).join('');
+          setTimeout(() => document.getElementById('filler-bar').style.display = 'none', 4000);
+        }
+      } catch (err) {
+        hideTyping();
+        Toast.error(err.message);
+      } finally {
+        sendBtn.disabled = false;
+        input.disabled = false;
+        input.focus();
+      }
+    }
+
+    // Enter to send
+    document.getElementById('user-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+    });
+
+    // ── End Interview ──────────────────────────────────────────────
+    let endConfirmTimeout = null;
+    async function endInterview() {
+      if (!sessionId || !isRunning) return;
+      
+      const endBtn = document.getElementById('end-btn');
+      if (endBtn.textContent === 'End') {
+        endBtn.textContent = 'Confirm?';
+        endBtn.style.background = 'var(--yellow)';
+        endBtn.style.borderColor = 'var(--yellow)';
+        endBtn.style.color = '#000';
+        endConfirmTimeout = setTimeout(() => {
+          if (isRunning) {
+            endBtn.textContent = 'End';
+            endBtn.style.background = '';
+            endBtn.style.borderColor = '';
+            endBtn.style.color = '';
+          }
+        }, 3000);
+        return;
+      }
+      clearTimeout(endConfirmTimeout);
+
+      clearInterval(timerInterval);
+      isRunning = false;
+
+      endBtn.disabled = true;
+      endBtn.textContent = 'Evaluating...';
+      endBtn.style.background = '';
+      endBtn.style.borderColor = '';
+      endBtn.style.color = '';
+      document.getElementById('send-btn').disabled = true;
+      document.getElementById('user-input').disabled = true;
+      document.getElementById('status-badge').textContent = '● Evaluating...';
+
+      try {
+        await api.post('/interview/end', { sessionId, duration: seconds });
+        Toast.success('Interview complete! Redirecting to evaluation...');
+        setTimeout(() => window.location.href = `evaluation.html?id=${sessionId}`, 1500);
+      } catch (err) {
+        Toast.error(err.message);
+      }
+    }
+
+    // ── Coding Sandbox ─────────────────────────────────────────────
+    function switchTab(tab) {
+      document.getElementById('tab-chat').classList.toggle('active', tab === 'chat');
+      document.getElementById('tab-code').classList.toggle('active', tab === 'code');
+      document.getElementById('chat-panel').style.display = tab === 'chat' ? 'flex' : 'none';
+      document.getElementById('code-panel').style.display = tab === 'code' ? 'flex' : 'none';
+    }
+
+    document.getElementById('code-lang').addEventListener('change', (e) => {
+      const ext = { python: 'main.py', javascript: 'main.js', java: 'Main.java', cpp: 'main.cpp' };
+      document.getElementById('lang-label').textContent = ext[e.target.value] || 'main.py';
+    });
+
+    async function submitCode() {
+      const code = document.getElementById('code-editor').value.trim();
+      const lang = document.getElementById('code-lang').value;
+      const question = document.getElementById('code-question').textContent;
+
+      if (!code) { Toast.error('Write some code first!'); return; }
+
+      const btn = document.querySelector('#code-panel .btn-primary');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Reviewing...';
+
+      try {
+        const data = await api.post('/interview/code-review', { sessionId, code, language: lang, question });
+        document.getElementById('review-card').style.display = 'block';
+        document.getElementById('review-content').textContent = data.review;
+        Toast.success('Code reviewed by AI!');
+      } catch (err) {
+        Toast.error(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '▶ Submit & Review';
+      }
+    }
+  </script>
+</body>
+</html>

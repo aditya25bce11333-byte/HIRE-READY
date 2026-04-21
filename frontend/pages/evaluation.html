@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evaluation — HireReady</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <style>
+    .score-arc {
+      width:140px;height:140px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      position:relative;margin:0 auto;
+    }
+    .score-arc::before {
+      content:'';position:absolute;inset:12px;
+      background:var(--card-bg);border-radius:50%;z-index:1;
+    }
+    .score-arc-val {
+      position:relative;z-index:2;text-align:center;
+    }
+    .roadmap-item {
+      display:flex;align-items:flex-start;gap:12px;
+      padding:12px 0;border-bottom:1px solid var(--border);
+    }
+    .roadmap-item:last-child{border-bottom:none;}
+    .roadmap-num {
+      width:28px;height:28px;background:var(--brand-glow);
+      border:1px solid var(--brand-dark);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.75rem;font-weight:700;color:var(--brand-light);
+      flex-shrink:0;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Evaluation Layer</div>
+          <div class="page-subtitle">Comprehensive performance analysis with key metrics and scorecards</div>
+        </div>
+        <div class="flex gap-2">
+          <span class="badge badge-brand" id="eval-status">● Loading...</span>
+          <a href="interview.html" class="btn btn-primary btn-sm">▶ New Interview</a>
+        </div>
+      </div>
+
+      <div id="loading-state" style="text-align:center;padding:60px;color:var(--text-3);">
+        <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;"></div>
+        <div>Loading evaluation...</div>
+      </div>
+
+      <div id="eval-content" class="hidden">
+        <!-- Meta row -->
+        <div class="flex gap-2 mb-4 items-center" id="eval-meta" style="flex-wrap:wrap;">
+          <span class="badge badge-blue" id="meta-role">SDE</span>
+          <span class="badge badge-yellow" id="meta-diff">Medium</span>
+          <span class="text-xs text-muted" id="meta-date">—</span>
+          <span class="text-xs text-muted" id="meta-dur">—</span>
+        </div>
+
+        <!-- Top row: Score rings + Fit Score -->
+        <div class="eval-grid">
+          <!-- Score Rings -->
+          <div class="card">
+            <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:20px;">📊 Performance Analysis</h3>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+              <div class="score-ring-wrap">
+                <div class="score-arc" id="arc-tech">
+                  <div class="score-arc-val">
+                    <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;" id="val-tech">—</div>
+                    <div style="font-size:0.65rem;color:var(--text-3);">Technical</div>
+                  </div>
+                </div>
+              </div>
+              <div class="score-ring-wrap">
+                <div class="score-arc" id="arc-comm">
+                  <div class="score-arc-val">
+                    <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;" id="val-comm">—</div>
+                    <div style="font-size:0.65rem;color:var(--text-3);">Communication</div>
+                  </div>
+                </div>
+              </div>
+              <div class="score-ring-wrap">
+                <div class="score-arc" id="arc-conf">
+                  <div class="score-arc-val">
+                    <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;" id="val-conf">—</div>
+                    <div style="font-size:0.65rem;color:var(--text-3);">Confidence</div>
+                  </div>
+                </div>
+              </div>
+              <div class="score-ring-wrap">
+                <div class="score-arc" id="arc-overall">
+                  <div class="score-arc-val">
+                    <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;" id="val-overall">—</div>
+                    <div style="font-size:0.65rem;color:var(--text-3);">Overall</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fit Score + Key Metrics -->
+          <div class="card">
+            <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;">🎯 Fit Score & Key Metrics</h3>
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="font-family:var(--font-head);font-size:3.5rem;font-weight:800;color:var(--brand-light);" id="fit-score">—</div>
+              <div style="font-size:0.8rem;color:var(--text-2);" id="fit-label">Role Readiness</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:4px;">
+                  <span class="text-sm text-muted">Answer Quality</span>
+                  <span class="text-sm font-bold" id="aq-val">—</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="aq-bar" style="width:0%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:4px;">
+                  <span class="text-sm text-muted">Weakness Areas</span>
+                  <span class="text-sm font-bold" id="weakness-count">—</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill red" id="weakness-bar" style="width:0%;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scorecard row -->
+        <div class="scorecard-grid mt-4" style="margin-top:20px;">
+          <div class="scorecard-item">
+            <div class="scorecard-value" id="sc-tech">—</div>
+            <div class="scorecard-label">Technical</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill green" id="sc-tech-bar" style="width:0%;"></div></div>
+          </div>
+          <div class="scorecard-item">
+            <div class="scorecard-value" id="sc-comm">—</div>
+            <div class="scorecard-label">Communication</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" id="sc-comm-bar" style="width:0%;"></div></div>
+          </div>
+          <div class="scorecard-item">
+            <div class="scorecard-value" id="sc-conf">—</div>
+            <div class="scorecard-label">Confidence</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" id="sc-conf-bar" style="width:0%;"></div></div>
+          </div>
+          <div class="scorecard-item">
+            <div class="scorecard-value" id="sc-overall">—</div>
+            <div class="scorecard-label">Overall</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" id="sc-overall-bar" style="width:0%;"></div></div>
+          </div>
+        </div>
+
+        <!-- Bottom row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:20px;">
+          <!-- Strengths -->
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;color:var(--green);">✅ Strengths</h3>
+            <div id="strengths-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <!-- Weaknesses -->
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;color:var(--yellow);">⚠️ Areas to Improve</h3>
+            <div id="weaknesses-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <!-- Filler Words -->
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">🗣️ Speech Analysis</h3>
+            <div style="margin-bottom:10px;">
+              <div class="flex items-center justify-between mb-4" style="margin-bottom:4px;">
+                <span class="text-sm text-muted">Filler Word Count</span>
+                <span class="badge badge-yellow" id="filler-count">0</span>
+              </div>
+            </div>
+            <div class="tags-row" id="filler-words-display"></div>
+            <div style="margin-top:12px;">
+              <div class="text-xs text-muted" style="margin-bottom:4px;">Sentiment Analysis</div>
+              <div class="progress-bar"><div class="progress-fill green" id="sentiment-bar" style="width:75%;"></div></div>
+              <div class="text-xs text-muted" style="margin-top:3px;" id="sentiment-label">75% positive</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Feedback -->
+        <div class="card" style="margin-top:20px;">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:12px;">🤖 AI Feedback</h3>
+          <div id="ai-feedback" style="color:var(--text-2);line-height:1.7;font-size:0.9rem;"></div>
+        </div>
+
+        <!-- Improvement Roadmap -->
+        <div class="card" style="margin-top:20px;">
+          <div class="flex items-center justify-between mb-4">
+            <h3 style="font-size:0.95rem;font-weight:700;">🗺️ Improvement Roadmap</h3>
+            <a href="resources.html" class="btn btn-outline btn-sm">📚 Resources</a>
+          </div>
+          <div id="roadmap-list"></div>
+        </div>
+
+        <!-- Trend -->
+        <div class="card" style="margin-top:20px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:2rem;" id="trend-icon">📈</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:4px;" id="trend-label">Performance Trend</div>
+            <div style="font-size:0.85rem;color:var(--text-2);" id="trend-desc">Keep practicing for consistent improvement.</div>
+          </div>
+          <div style="margin-left:auto;">
+            <a href="interview.html" class="btn btn-primary">▶ Practice Again</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="no-eval" class="hidden" style="text-align:center;padding:60px;color:var(--text-3);">
+        <div style="font-size:3rem;margin-bottom:16px;">📊</div>
+        <h3 style="margin-bottom:8px;">No evaluation found</h3>
+        <p>Complete an interview to see your evaluation here.</p>
+        <a href="interview.html" class="btn btn-primary" style="margin-top:16px;">▶ Start Interview</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error();
+    document.getElementById('navbar-root').innerHTML = buildNavbar('evaluation');
+    document.getElementById('sidebar-root').innerHTML = buildSidebar('evaluation');
+
+    function setArc(id, score) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const color = score >= 80 ? '#22c55e' : score >= 60 ? '#f59e0b' : '#ef4444';
+      const deg = Math.round((score / 100) * 360);
+      el.style.background = `conic-gradient(${color} ${deg}deg, var(--surface-2) ${deg}deg)`;
+    }
+
+    async function loadEval() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      try {
+        const data = id ? await api.get(`/evaluation/${id}`) : await api.get('/evaluation/latest');
+
+        if (!data.evaluation) {
+          document.getElementById('loading-state').style.display = 'none';
+          document.getElementById('no-eval').classList.remove('hidden');
+          return;
+        }
+
+        const ev = data.evaluation;
+        const sess = data.session || {};
+
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('eval-content').classList.remove('hidden');
+        document.getElementById('eval-status').textContent = '● Analysis Complete';
+
+        // Meta
+        document.getElementById('meta-role').textContent = sess.role || 'SDE';
+        document.getElementById('meta-diff').textContent = sess.difficulty || 'Medium';
+        document.getElementById('meta-date').textContent = sess.completedAt ? fmtDate(sess.completedAt) : '';
+        document.getElementById('meta-dur').textContent = sess.duration ? `⏱ ${fmtDuration(sess.duration)}` : '';
+
+        // Scores
+        const fields = [
+          ['tech', ev.technicalAccuracy], ['comm', ev.communication],
+          ['conf', ev.confidence], ['overall', ev.overallScore]
+        ];
+        fields.forEach(([key, val]) => {
+          const v = val || 0;
+          document.getElementById(`val-${key}`).textContent = v + '%';
+          document.getElementById(`sc-${key}`).textContent = v + '%';
+          document.getElementById(`sc-${key}-bar`).style.width = v + '%';
+          setArc(`arc-${key}`, v);
+        });
+
+        // Fit score
+        document.getElementById('fit-score').textContent = (ev.fitScore || 0).toFixed(1) + '/10';
+        const fitLabel = ev.fitScore >= 8 ? 'Excellent match' : ev.fitScore >= 6 ? 'Good match' : 'Needs improvement';
+        document.getElementById('fit-label').textContent = fitLabel;
+
+        // Answer quality
+        const aq = ev.answerQuality || 0;
+        document.getElementById('aq-val').textContent = aq + '%';
+        document.getElementById('aq-bar').style.width = aq + '%';
+
+        // Weaknesses
+        const wl = (ev.weaknesses || []).length;
+        document.getElementById('weakness-count').textContent = `${wl} found`;
+        document.getElementById('weakness-bar').style.width = Math.min(100, wl * 25) + '%';
+
+        // Strengths
+        document.getElementById('strengths-list').innerHTML = (ev.strengths || []).map(s =>
+          `<div class="flex gap-2"><span style="color:var(--green);">✓</span><span class="text-sm">${s}</span></div>`
+        ).join('') || '<div class="text-sm text-muted">Complete more interviews to identify strengths</div>';
+
+        // Weaknesses list
+        document.getElementById('weaknesses-list').innerHTML = (ev.weaknesses || []).map(w =>
+          `<div class="flex gap-2"><span style="color:var(--yellow);">⚠</span><span class="text-sm">${w}</span></div>`
+        ).join('') || '<div class="text-sm text-muted">No major weaknesses identified!</div>';
+
+        // Filler words
+        document.getElementById('filler-count').textContent = ev.fillerWordCount || 0;
+        const fw = ev.detectedFillerWords || [];
+        document.getElementById('filler-words-display').innerHTML = fw.length
+          ? fw.map(w => `<span class="tag-chip filler">${w}</span>`).join('')
+          : '<span class="text-xs text-muted">No filler words detected 🎉</span>';
+
+        // AI Feedback
+        document.getElementById('ai-feedback').textContent = ev.feedback || 'Evaluation complete. Keep practicing for improvement.';
+
+        // Roadmap
+        document.getElementById('roadmap-list').innerHTML = (ev.improvementRoadmap || []).map((item, i) => `
+          <div class="roadmap-item">
+            <div class="roadmap-num">${i + 1}</div>
+            <div class="text-sm" style="padding-top:4px;">${item}</div>
+          </div>
+        `).join('') || '<div class="text-sm text-muted">No specific roadmap items. Great performance!</div>';
+
+        // Trend
+        const trend = ev.trend || 'stable';
+        const trendMap = {
+          positive: { icon: '📈', label: 'Improving Trend', desc: 'Your performance is trending upward. Keep it up!' },
+          negative: { icon: '📉', label: 'Needs Attention', desc: 'Focus on the weak areas highlighted above to improve.' },
+          stable:   { icon: '➡️', label: 'Stable Performance', desc: 'Consistent performance. Push harder to see growth.' },
+        };
+        const t = trendMap[trend] || trendMap.stable;
+        document.getElementById('trend-icon').textContent = t.icon;
+        document.getElementById('trend-label').textContent = t.label;
+        document.getElementById('trend-desc').textContent = t.desc;
+
+      } catch (err) {
+        document.getElementById('loading-state').innerHTML = `<div style="color:var(--red);">Error: ${err.message}</div>`;
+      }
+    }
+
+    loadEval();
+  </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resources — HireReady</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📚 Learning Resources</div>
+          <div class="page-subtitle">Curated resources for your interview preparation journey</div>
+        </div>
+        <span class="badge badge-green">● 24 Curated Resources</span>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex gap-2 flex-wrap mb-4" style="margin-bottom:20px;">
+        <button class="filter-btn active" data-role="all" onclick="filterResources(this,'role')">All Roles</button>
+        <button class="filter-btn" data-role="SDE" onclick="filterResources(this,'role')">SDE</button>
+        <button class="filter-btn" data-role="Data Scientist" onclick="filterResources(this,'role')">Data Sci</button>
+        <button class="filter-btn" data-role="DevOps" onclick="filterResources(this,'role')">DevOps</button>
+        <button class="filter-btn" data-role="PM" onclick="filterResources(this,'role')">PM</button>
+        <div style="width:1px;background:var(--border);margin:0 4px;"></div>
+        <button class="filter-btn active" data-cat="all" onclick="filterResources(this,'cat')">All Topics</button>
+        <button class="filter-btn" data-cat="DSA" onclick="filterResources(this,'cat')">DSA</button>
+        <button class="filter-btn" data-cat="System Design" onclick="filterResources(this,'cat')">System Design</button>
+        <button class="filter-btn" data-cat="Behavioral" onclick="filterResources(this,'cat')">Behavioral</button>
+        <button class="filter-btn" data-cat="ML/AI" onclick="filterResources(this,'cat')">ML/AI</button>
+        <button class="filter-btn" data-cat="DevOps" onclick="filterResources(this,'cat')">DevOps</button>
+        <button class="filter-btn" data-cat="PM" onclick="filterResources(this,'cat')">PM</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="text-sm text-muted" id="result-count">Loading...</div>
+        <div class="flex gap-2">
+          <button class="filter-btn active" data-diff="all" onclick="filterResources(this,'diff')">All Levels</button>
+          <button class="filter-btn" data-diff="Easy" onclick="filterResources(this,'diff')">Easy</button>
+          <button class="filter-btn" data-diff="Medium" onclick="filterResources(this,'diff')">Medium</button>
+          <button class="filter-btn" data-diff="Hard" onclick="filterResources(this,'diff')">Hard</button>
+        </div>
+      </div>
+
+      <div class="resources-grid" id="resources-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3);">
+          <div class="spinner" style="margin:0 auto 12px;width:30px;height:30px;"></div>
+          Loading resources...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error();
+    document.getElementById('navbar-root').innerHTML = buildNavbar('resources');
+    document.getElementById('sidebar-root').innerHTML = buildSidebar('resources');
+
+    let currentRole = 'all', currentCat = 'all', currentDiff = 'all';
+
+    function filterResources(btn, type) {
+      if (type === 'role') {
+        document.querySelectorAll('[data-role]').forEach(b => b.classList.remove('active'));
+        currentRole = btn.dataset.role;
+      } else if (type === 'cat') {
+        document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+        currentCat = btn.dataset.cat;
+      } else if (type === 'diff') {
+        document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+        currentDiff = btn.dataset.diff;
+      }
+      btn.classList.add('active');
+      loadResources();
+    }
+
+    const typeIcons = { article: '📄', video: '▶️', guide: '📖', course: '🎓' };
+    const diffColors = { Easy: 'green', Medium: 'yellow', Hard: 'red' };
+
+    async function loadResources() {
+      try {
+        const data = await api.get(`/resources?role=${currentRole}&category=${currentCat}&difficulty=${currentDiff}`);
+        const resources = data.resources || [];
+
+        document.getElementById('result-count').textContent = `${resources.length} resources found`;
+
+        if (!resources.length) {
+          document.getElementById('resources-grid').innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3);">
+              <div style="font-size:2rem;margin-bottom:8px;">🔍</div>
+              No resources match your filters. Try adjusting them.
+            </div>`;
+          return;
+        }
+
+        document.getElementById('resources-grid').innerHTML = resources.map(r => `
+          <div class="resource-card fade-in">
+            <div class="resource-header">
+              <div>
+                <div class="resource-type">
+                  <span>${typeIcons[r.type] || '📄'}</span>
+                  <span>${r.category}</span>
+                </div>
+                <div class="resource-title">${r.title}</div>
+              </div>
+              <span class="badge badge-${diffColors[r.difficulty] || 'blue'}">${r.difficulty}</span>
+            </div>
+            <div class="tags-row" style="margin:8px 0;">
+              ${r.tags.map(t => `<span class="badge badge-blue" style="font-size:0.68rem;">${t}</span>`).join('')}
+            </div>
+            <div class="resource-footer">
+              <div class="resource-duration">⏱ ${r.duration}</div>
+              <a href="${r.url}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+                Open →
+              </a>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        Toast.error(err.message);
+      }
+    }
+
+    loadResources();
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up — HireReady</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="auth-page">
+    <div class="auth-card fade-in">
+      <div class="auth-logo">
+        <div class="logo-icon-lg">💼</div>
+        <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;">
+          Hire<strong style="color:var(--brand-light)">Ready</strong>
+        </div>
+      </div>
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-sub">Start your AI-powered interview preparation journey today</p>
+
+      <div class="auth-error" id="auth-error"></div>
+
+      <form class="auth-form" id="reg-form" autocomplete="on">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" type="text" id="name" placeholder="John Doe" required autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" id="email" placeholder="you@example.com" required autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="password" placeholder="Min. 8 chars, include uppercase & number" required autocomplete="new-password"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Role</label>
+          <select class="form-select" id="targetRole">
+            <option value="SDE">Software Development Engineer (SDE)</option>
+            <option value="Data Scientist">Data Scientist</option>
+            <option value="DevOps">DevOps Engineer</option>
+            <option value="PM">Product Manager (PM)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary w-full" type="submit" id="submit-btn" style="justify-content:center;">
+          Create Account
+        </button>
+      </form>
+
+      <p class="auth-switch">
+        Already have an account? <a href="login.html">Sign in</a>
+      </p>
+
+      <p style="text-align:center;font-size:0.72rem;color:var(--text-3);margin-top:16px;">
+        By creating an account, you agree to our Terms of Service and Privacy Policy.
+        Your data is encrypted and never shared with third parties.
+      </p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    document.getElementById('navbar-root').innerHTML = buildNavbar('');
+    if (Auth.isLoggedIn()) window.location.href = '/pages/dashboard.html';
+
+    const errEl = document.getElementById('auth-error');
+    const btn = document.getElementById('submit-btn');
+
+    document.getElementById('reg-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+      const pw = document.getElementById('password').value;
+      if (pw.length < 8) {
+        errEl.textContent = 'Password must be at least 8 characters.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+        return;
+      }
+
+      try {
+        await Auth.register(
+          document.getElementById('name').value.trim(),
+          document.getElementById('email').value.trim(),
+          pw,
+          document.getElementById('targetRole').value
+        );
+        Toast.success('Account created! Welcome to HireReady 🎉');
+        setTimeout(() => window.location.href = '/pages/dashboard.html', 600);
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings — HireReady</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">⚙️ Settings</div>
+          <div class="page-subtitle">Manage your account and interview preferences</div>
+        </div>
+        <span class="badge badge-green">● All Systems Operational</span>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Settings Navigation -->
+        <div>
+          <div class="settings-nav" id="settings-nav">
+            <div class="settings-nav-item active" data-panel="profile" onclick="switchPanel('profile')">
+              👤 Profile
+            </div>
+            <div class="settings-nav-item" data-panel="appearance" onclick="switchPanel('appearance')">
+              🎨 Appearance
+            </div>
+            <div class="settings-nav-item" data-panel="interview" onclick="switchPanel('interview')">
+              🎯 Interview Prefs
+            </div>
+            <div class="settings-nav-item" data-panel="resume" onclick="switchPanel('resume')">
+              📄 Resume
+            </div>
+            <div class="settings-nav-item" data-panel="security" onclick="switchPanel('security')">
+              🔒 Security
+            </div>
+            <div class="settings-nav-item" data-panel="privacy" onclick="switchPanel('privacy')">
+              🛡️ Privacy
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Panels -->
+        <div>
+          <!-- Profile Panel -->
+          <div class="settings-panel active card" id="panel-profile">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;">👤 Profile Settings</h2>
+            <div class="settings-section">
+              <div class="settings-section-title">Account Information</div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input class="form-input" type="text" id="pf-name" placeholder="Your name"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email Address</label>
+                  <input class="form-input" type="email" id="pf-email" placeholder="your@email.com" disabled
+                    style="opacity:0.6;cursor:not-allowed;"/>
+                  <div class="text-xs text-muted" style="margin-top:3px;">Email cannot be changed</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Target Role</label>
+                  <select class="form-select" id="pf-role">
+                    <option value="SDE">Software Development Engineer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="DevOps">DevOps Engineer</option>
+                    <option value="PM">Product Manager</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveProfile()" id="save-profile-btn">
+                  Save Profile
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-section" style="margin-top:24px;">
+              <div class="settings-section-title">Account Stats</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                <div style="text-align:center;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);">
+                  <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--brand-light);" id="st-sessions">—</div>
+                  <div class="text-xs text-muted">Total Sessions</div>
+                </div>
+                <div style="text-align:center;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);">
+                  <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--green);" id="st-streak">—</div>
+                  <div class="text-xs text-muted">Day Streak</div>
+                </div>
+                <div style="text-align:center;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);">
+                  <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--yellow);" id="st-points">—</div>
+                  <div class="text-xs text-muted">Total Points</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance Panel -->
+          <div class="settings-panel card" id="panel-appearance">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;">🎨 Appearance</h2>
+            <div class="settings-section">
+              <div class="settings-section-title">Theme</div>
+
+              <!-- Dark/Light Theme Selector -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div id="dark-theme-card" class="card" style="cursor:pointer;border-color:var(--brand);text-align:center;padding:20px;"
+                  onclick="selectTheme('dark')">
+                  <div style="font-size:2rem;margin-bottom:8px;">🌙</div>
+                  <div style="font-weight:700;">Dark Mode</div>
+                  <div class="text-xs text-muted" style="margin-top:4px;">Deep navy background</div>
+                  <div style="margin-top:10px;display:flex;gap:4px;justify-content:center;">
+                    <div style="width:16px;height:16px;border-radius:50%;background:#0d0d1a;border:1px solid var(--border);"></div>
+                    <div style="width:16px;height:16px;border-radius:50%;background:#1e1e3a;"></div>
+                    <div style="width:16px;height:16px;border-radius:50%;background:#7c5cfc;"></div>
+                  </div>
+                  <div class="badge badge-brand" style="margin-top:10px;" id="dark-active-badge">✓ Active</div>
+                </div>
+                <div id="light-theme-card" class="card" style="cursor:pointer;text-align:center;padding:20px;"
+                  onclick="selectTheme('light')">
+                  <div style="font-size:2rem;margin-bottom:8px;">☀️</div>
+                  <div style="font-weight:700;">Light Mode</div>
+                  <div class="text-xs text-muted" style="margin-top:4px;">Clean white background</div>
+                  <div style="margin-top:10px;display:flex;gap:4px;justify-content:center;">
+                    <div style="width:16px;height:16px;border-radius:50%;background:#f4f4fb;border:1px solid #ddd;"></div>
+                    <div style="width:16px;height:16px;border-radius:50%;background:#ffffff;border:1px solid #ddd;"></div>
+                    <div style="width:16px;height:16px;border-radius:50%;background:#7c5cfc;"></div>
+                  </div>
+                  <div class="badge" style="margin-top:10px;display:none;" id="light-active-badge">✓ Active</div>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <h4>Quick Toggle</h4>
+                  <p>Switch between dark and light mode</p>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="Theme.toggle();updateThemeUI();">🌗 Toggle Theme</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interview Preferences Panel -->
+          <div class="settings-panel card" id="panel-interview">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;">🎯 Interview Preferences</h2>
+            <div class="settings-section">
+              <div class="settings-section-title">Default Settings</div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <h4>Default Difficulty</h4>
+                  <p>Starting difficulty for new interview sessions</p>
+                </div>
+                <select class="form-select" id="pref-diff" style="width:120px;">
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <h4>⚡ Pressure Mode</h4>
+                  <p>AI interruptions and time pressure by default</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="pref-pressure">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <h4>🔔 Notifications</h4>
+                  <p>Streak reminders and practice alerts</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="pref-notif" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button class="btn btn-primary" onclick="saveInterviewPrefs()" id="save-prefs-btn">
+                  Save Preferences
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resume Panel -->
+          <div class="settings-panel card" id="panel-resume">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;">📄 Resume Upload</h2>
+            <div class="settings-section">
+              <div class="settings-section-title">Upload Your Resume</div>
+              <div style="background:var(--surface-2);border:2px dashed var(--border);border-radius:var(--radius-lg);
+                padding:32px;text-align:center;margin-bottom:16px;" id="resume-drop-zone">
+                <div style="font-size:2rem;margin-bottom:8px;">📎</div>
+                <div style="font-weight:600;margin-bottom:4px;">Drop your resume here</div>
+                <div class="text-xs text-muted" style="margin-bottom:16px;">PDF or TXT, max 5MB</div>
+                <label class="btn btn-outline" style="cursor:pointer;">
+                  Choose File
+                  <input type="file" id="resume-file" accept=".pdf,.txt" style="display:none;" onchange="uploadResume()"/>
+                </label>
+              </div>
+              <div id="resume-status" class="text-sm text-muted" style="text-align:center;"></div>
+
+              <div style="padding:14px;background:rgba(124,92,252,0.1);border-radius:var(--radius-md);border:1px solid var(--brand-dark);margin-top:16px;">
+                <div style="font-size:0.82rem;color:var(--brand-light);font-weight:600;margin-bottom:4px;">Why upload a resume?</div>
+                <div class="text-xs text-muted">
+                  When you upload your resume, the AI interviewer will ask questions tailored to your specific
+                  experience, projects, and skills — making the simulation much more realistic and valuable.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Panel -->
+          <div class="settings-panel card" id="panel-security">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;">🔒 Security</h2>
+            <div class="settings-section">
+              <div class="settings-section-title">Change Password</div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="form-group">
+                  <label class="form-label">Current Password</label>
+                  <input class="form-input" type="password" id="pw-current" placeholder="••••••••" autocomplete="current-password"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">New Password</label>
+                  <input class="form-input" type="password" id="pw-new" placeholder="Min. 8 chars, uppercase & number" autocomplete="new-password"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm New Password</label>
+                  <input class="form-input" type="password" id="pw-confirm" placeholder="Repeat new password" autocomplete="new-password"/>
+                </div>
+                <button class="btn btn-primary" onclick="changePassword()" id="pw-btn">Update Password</button>
+              </div>
+            </div>
+
+            <div class="settings-section" style="margin-top:24px;">
+              <div class="settings-section-title">Security Info</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem;">
+                <div class="flex gap-2 items-center"><span style="color:var(--green);">✅</span> Passwords hashed with bcrypt (12 rounds)</div>
+                <div class="flex gap-2 items-center"><span style="color:var(--green);">✅</span> JWT authentication with 7-day expiry</div>
+                <div class="flex gap-2 items-center"><span style="color:var(--green);">✅</span> Account lockout after 5 failed login attempts</div>
+                <div class="flex gap-2 items-center"><span style="color:var(--green);">✅</span> Rate limiting on all API endpoints</div>
+                <div class="flex gap-2 items-center"><span style="color:var(--green);">✅</span> HTTP-only secure cookies</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy Panel -->
+          <div class="settings-panel card" id="panel-privacy">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;">🛡️ Privacy Policy</h2>
+            <div style="font-size:0.875rem;color:var(--text-2);line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+              <div>
+                <h4 style="color:var(--text);margin-bottom:6px;">Data Collection</h4>
+                <p>We collect your name, email, interview session data, and performance metrics to provide personalized feedback and track progress.</p>
+              </div>
+              <div>
+                <h4 style="color:var(--text);margin-bottom:6px;">Data Security</h4>
+                <p>All data is encrypted at rest and in transit. Passwords are hashed using bcrypt. Your resume text is stored securely and only used to generate interview questions.</p>
+              </div>
+              <div>
+                <h4 style="color:var(--text);margin-bottom:6px;">Data Usage</h4>
+                <p>Your data is used exclusively to power HireReady's features. We do not sell, share, or transfer your personal data to third parties.</p>
+              </div>
+              <div>
+                <h4 style="color:var(--text);margin-bottom:6px;">AI Processing</h4>
+                <p>Interview conversations are processed by the Claude AI API (Anthropic) to generate questions and evaluations. Anthropic's privacy policy applies to this processing.</p>
+              </div>
+              <div>
+                <h4 style="color:var(--text);margin-bottom:6px;">Your Rights</h4>
+                <p>You can request deletion of your account and all associated data at any time by contacting our support team.</p>
+              </div>
+              <div style="padding:12px 16px;background:rgba(34,197,94,0.1);border-radius:var(--radius-md);border:1px solid rgba(34,197,94,0.3);">
+                <span style="color:var(--green);font-weight:600;">✅ GDPR Compliant</span>
+                <span class="text-muted" style="font-size:0.82rem;margin-left:8px;">We respect your data rights</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error();
+    document.getElementById('navbar-root').innerHTML = buildNavbar('settings');
+    document.getElementById('sidebar-root').innerHTML = buildSidebar('settings');
+
+    function switchPanel(name) {
+      document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById(`panel-${name}`).classList.add('active');
+      document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+    }
+
+    function updateThemeUI() {
+      const t = Theme.current();
+      const dk = document.getElementById('dark-theme-card');
+      const lk = document.getElementById('light-theme-card');
+      dk.style.borderColor = t === 'dark' ? 'var(--brand)' : 'var(--border)';
+      lk.style.borderColor = t === 'light' ? 'var(--brand)' : 'var(--border)';
+      document.getElementById('dark-active-badge').style.display = t === 'dark' ? 'inline-flex' : 'none';
+      document.getElementById('light-active-badge').style.display = t === 'light' ? 'inline-flex' : 'none';
+    }
+
+    async function selectTheme(theme) {
+      Theme.set(theme);
+      updateThemeUI();
+      try { await api.put('/users/settings', { theme }); } catch {}
+      Toast.success(`Switched to ${theme} mode`);
+    }
+
+    async function loadProfile() {
+      try {
+        const data = await api.get('/users/profile');
+        const user = data.user;
+        document.getElementById('pf-name').value = user.name || '';
+        document.getElementById('pf-email').value = user.email || '';
+        document.getElementById('pf-role').value = user.targetRole || 'SDE';
+        document.getElementById('pref-diff').value = user.settings?.difficulty || 'Medium';
+        document.getElementById('pref-pressure').checked = !!user.settings?.pressureMode;
+        document.getElementById('pref-notif').checked = user.settings?.notifications !== false;
+        document.getElementById('st-sessions').textContent = user.totalSessions || 0;
+        document.getElementById('st-streak').textContent = user.streak || 0;
+        document.getElementById('st-points').textContent = (user.totalPoints || 0).toLocaleString();
+      } catch (err) {
+        Toast.error('Failed to load profile');
+      }
+    }
+
+    async function saveProfile() {
+      const btn = document.getElementById('save-profile-btn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving...';
+      try {
+        await api.put('/users/profile', {
+          name: document.getElementById('pf-name').value.trim(),
+          targetRole: document.getElementById('pf-role').value,
+        });
+        // Update local user
+        const user = Auth.getUser();
+        if (user) {
+          user.name = document.getElementById('pf-name').value.trim();
+          user.targetRole = document.getElementById('pf-role').value;
+          localStorage.setItem('hr_user', JSON.stringify(user));
+        }
+        Toast.success('Profile saved!');
+      } catch (err) {
+        Toast.error(err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Profile';
+      }
+    }
+
+    async function saveInterviewPrefs() {
+      const btn = document.getElementById('save-prefs-btn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving...';
+      try {
+        await api.put('/users/settings', {
+          difficulty: document.getElementById('pref-diff').value,
+          pressureMode: document.getElementById('pref-pressure').checked,
+          notifications: document.getElementById('pref-notif').checked,
+        });
+        Toast.success('Interview preferences saved!');
+      } catch (err) {
+        Toast.error(err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Preferences';
+      }
+    }
+
+    async function changePassword() {
+      const current = document.getElementById('pw-current').value;
+      const newPw = document.getElementById('pw-new').value;
+      const confirm = document.getElementById('pw-confirm').value;
+
+      if (!current || !newPw) { Toast.error('Fill in all fields'); return; }
+      if (newPw !== confirm) { Toast.error('Passwords do not match'); return; }
+      if (newPw.length < 8) { Toast.error('New password must be at least 8 characters'); return; }
+
+      const btn = document.getElementById('pw-btn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Updating...';
+      try {
+        await api.put('/users/password', { currentPassword: current, newPassword: newPw });
+        Toast.success('Password updated!');
+        document.getElementById('pw-current').value = '';
+        document.getElementById('pw-new').value = '';
+        document.getElementById('pw-confirm').value = '';
+      } catch (err) {
+        Toast.error(err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Update Password';
+      }
+    }
+
+    async function uploadResume() {
+      const file = document.getElementById('resume-file').files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('resume-status');
+      statusEl.textContent = '⏳ Uploading resume...';
+
+      const formData = new FormData();
+      formData.append('resume', file);
+
+      try {
+        const token = Auth.getToken();
+        const res = await fetch(`${window.location.origin}/api/users/resume`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        statusEl.innerHTML = `✅ Resume uploaded! Preview: <em style="color:var(--text-3);">${data.preview}...</em>`;
+        Toast.success('Resume uploaded! AI will use it for personalized questions.');
+      } catch (err) {
+        statusEl.textContent = `❌ ${err.message}`;
+        Toast.error(err.message);
+      }
+    }
+
+    // Init
+    loadProfile();
+    updateThemeUI();
+  </script>
+</body>
+</html>

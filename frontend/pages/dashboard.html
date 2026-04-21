@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — HireReady</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="welcome-msg">Welcome back 👋</div>
+          <div class="page-subtitle">Your interview preparation journey continues</div>
+        </div>
+        <div class="flex gap-2">
+          <span class="badge badge-green" id="streak-badge">🔥 0 day streak</span>
+          <a href="interview.html" class="btn btn-primary btn-sm">▶ Start Interview</a>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-grid" id="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">🎯</div>
+          <div class="metric-label">Total Sessions</div>
+          <div class="metric-value" id="m-sessions">—</div>
+          <div class="metric-sub" id="m-sessions-sub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">📊</div>
+          <div class="metric-label">Avg Score</div>
+          <div class="metric-value" id="m-avg">—</div>
+          <div class="metric-sub">across all sessions</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">⭐</div>
+          <div class="metric-label">Total Points</div>
+          <div class="metric-value" id="m-points">—</div>
+          <div class="metric-sub">leaderboard score</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🔥</div>
+          <div class="metric-label">Current Streak</div>
+          <div class="metric-value" id="m-streak">—</div>
+          <div class="metric-sub">days in a row</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Recent Sessions -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 style="font-size:1rem;font-weight:700;">Recent Sessions</h3>
+            <a href="evaluation.html" class="text-sm text-brand">View All</a>
+          </div>
+          <div class="session-list" id="session-list">
+            <div style="text-align:center;padding:40px;color:var(--text-3);">
+              <div style="font-size:2rem;margin-bottom:8px;">🎙️</div>
+              No sessions yet. <a href="interview.html">Start your first interview!</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:14px;">📈 Performance by Role</h3>
+            <div id="role-breakdown" style="display:flex;flex-direction:column;gap:10px;">
+              <div style="color:var(--text-3);font-size:0.82rem;">Complete interviews to see breakdown</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:14px;">🚀 Quick Start</h3>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <a href="interview.html?role=SDE&difficulty=Medium" class="btn btn-ghost btn-sm" style="justify-content:flex-start;">
+                💻 SDE Technical Round
+              </a>
+              <a href="interview.html?role=SDE&difficulty=Medium&pressure=true" class="btn btn-ghost btn-sm" style="justify-content:flex-start;">
+                ⚡ Pressure Mode Interview
+              </a>
+              <a href="interview.html?role=PM&difficulty=Easy" class="btn btn-ghost btn-sm" style="justify-content:flex-start;">
+                🎯 PM Behavioral Round
+              </a>
+              <a href="resources.html" class="btn btn-ghost btn-sm" style="justify-content:flex-start;">
+                📚 Browse Resources
+              </a>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:10px;">🏆 Leaderboard Rank</h3>
+            <div id="rank-display" style="text-align:center;padding:10px;">
+              <div style="font-family:var(--font-head);font-size:2.5rem;font-weight:800;color:var(--brand-light);" id="user-rank">—</div>
+              <div style="font-size:0.78rem;color:var(--text-3);">Global Rank</div>
+            </div>
+            <a href="leaderboard.html" class="btn btn-outline btn-sm w-full" style="justify-content:center;margin-top:8px;">
+              View Leaderboard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem Analysis (from Slide 2) -->
+      <div class="card mt-4" style="margin-top:24px;">
+        <div class="flex items-center justify-between mb-4">
+          <h3 style="font-size:1rem;font-weight:700;">📋 Why Most Students Fail Interviews</h3>
+          <span class="badge badge-brand">Insight</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+          <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:16px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--red);"></span>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text-2);">Random Preparation</span>
+            </div>
+            <div style="font-family:var(--font-head);font-size:2rem;font-weight:800;color:var(--text);">73%</div>
+            <div style="font-size:0.78rem;color:var(--text-3);margin-bottom:8px;">Students prepare without structure</div>
+            <span class="badge badge-red">-15% efficiency</span>
+          </div>
+          <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:16px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--yellow);"></span>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text-2);">No Simulation</span>
+            </div>
+            <div style="font-family:var(--font-head);font-size:2rem;font-weight:800;color:var(--text);">89%</div>
+            <div style="font-size:0.78rem;color:var(--text-3);margin-bottom:8px;">Never practice in realistic settings</div>
+            <span class="badge badge-yellow">High anxiety</span>
+          </div>
+          <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:16px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--red);"></span>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text-2);">No Feedback</span>
+            </div>
+            <div style="font-family:var(--font-head);font-size:2rem;font-weight:800;color:var(--text);">67%</div>
+            <div style="font-size:0.78rem;color:var(--text-3);margin-bottom:8px;">Lack confidence analysis</div>
+            <span class="badge badge-red">Poor communication</span>
+          </div>
+        </div>
+        <div style="background:rgba(124,92,252,0.1);border:1px solid var(--brand-dark);border-radius:var(--radius-md);padding:16px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:1.5rem;">💡</div>
+          <div>
+            <div style="font-weight:700;color:var(--brand-light);margin-bottom:4px;">HireReady closes this gap</div>
+            <div style="font-size:0.85rem;color:var(--text-2);">
+              End-to-end interview simulation with real-time AI feedback. Target improvement: <strong style="color:var(--green);">+45%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!Auth.requireAuth()) throw new Error();
+
+    document.getElementById('navbar-root').innerHTML = buildNavbar('dashboard');
+    document.getElementById('sidebar-root').innerHTML = buildSidebar('dashboard');
+
+    const user = Auth.getUser();
+    if (user) {
+      document.getElementById('welcome-msg').textContent = `Welcome back, ${user.name.split(' ')[0]} 👋`;
+      document.getElementById('streak-badge').textContent = `🔥 ${user.streak || 0} day streak`;
+    }
+
+    async function loadDashboard() {
+      try {
+        const [statsData, sessionsData] = await Promise.all([
+          api.get('/users/stats'),
+          api.get('/interview/sessions'),
+        ]);
+
+        const stats = statsData.stats;
+        document.getElementById('m-sessions').textContent = stats.totalSessions;
+        document.getElementById('m-avg').textContent = stats.avgScore ? stats.avgScore + '%' : '—';
+        document.getElementById('m-points').textContent = stats.totalPoints.toLocaleString();
+        document.getElementById('m-streak').textContent = stats.streak;
+        document.getElementById('streak-badge').textContent = `🔥 ${stats.streak} day streak`;
+
+        // Role breakdown
+        const rb = stats.roleBreakdown || {};
+        const rbEl = document.getElementById('role-breakdown');
+        if (Object.keys(rb).length) {
+          rbEl.innerHTML = Object.entries(rb).map(([role, count]) => `
+            <div class="flex items-center justify-between">
+              <span class="text-sm">${role}</span>
+              <div class="flex items-center gap-2">
+                <div class="progress-bar" style="width:80px;">
+                  <div class="progress-fill" style="width:${Math.min(100, count * 20)}%;"></div>
+                </div>
+                <span class="text-xs text-muted">${count}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Sessions list
+        const sessions = sessionsData.sessions || [];
+        const slEl = document.getElementById('session-list');
+        if (sessions.length) {
+          slEl.innerHTML = sessions.slice(0, 5).map(s => `
+            <a href="evaluation.html?id=${s._id}" class="session-item" style="text-decoration:none;">
+              <span class="session-role-badge">${s.role}</span>
+              <div style="flex:1;">
+                <div style="font-size:0.82rem;font-weight:600;color:var(--text);">${s.difficulty} · ${s.pressureMode ? '⚡ Pressure' : 'Normal'}</div>
+                <div class="session-date">${fmtDate(s.completedAt || s.createdAt)}</div>
+              </div>
+              <div class="session-score" style="color:var(--${scoreColor(s.evaluation?.overallScore || 0)});">
+                ${s.evaluation?.overallScore ? s.evaluation.overallScore + '%' : '—'}
+              </div>
+            </a>
+          `).join('');
+        }
+
+        // Leaderboard rank
+        try {
+          const lb = await api.get('/leaderboard');
+          document.getElementById('user-rank').textContent = lb.userRank ? `#${lb.userRank}` : '—';
+        } catch {}
+
+      } catch (err) {
+        console.error(err);
+        Toast.error('Failed to load dashboard data');
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
