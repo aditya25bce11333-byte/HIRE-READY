@@ -61,7 +61,7 @@ hireready-full/
 ### Prerequisites
 - Node.js 18+
 - MongoDB (local or MongoDB Atlas)
-- Anthropic API Key (for AI features)
+- Gemini 1.5 Flash API Key (for AI features)
 
 ### 1. Install backend dependencies
 
