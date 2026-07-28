@@ -1,164 +1,101 @@
 # HireReady — AI-Powered Interview Preparation Platform
 
-> "From Practice to Placement" — The Fifth Bit Hackathon 2026
+> *"From Practice to Placement"* — The Fifth Bit Hackathon 2026
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-brightgreen?style=for-the-badge&logo=render)](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
 
 ---
 
-##  Tech Stack
+## 🌟 Overview
+
+**HireReady** is an end-to-end, AI-powered mock interview platform designed to prepare job seekers for technical and HR interviews. It simulates real-life interview scenarios with role-based tracks, adaptive questions, real-time code reviews, pressure mode, anti-cheat detection, and comprehensive performance analytics.
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | HTML5, CSS3 (CSS Variables), Vanilla JS |
-| Backend | Node.js + Express.js |
-| Database | MongoDB + Mongoose |
-| AI Engine | Claude API (Anthropic) — claude-sonnet-4-20250514 |
-| Auth | JWT + bcryptjs + HttpOnly Cookies |
-| Security | Helmet, Rate Limiting, Input Validation, Account Lockout |
+|---|---|
+| **Frontend** | HTML5, CSS3 (Custom CSS Variables System), Vanilla JavaScript |
+| **Backend** | Node.js + Express.js (REST API) |
+| **Database** | MongoDB + Mongoose *(with In-Memory Fallback Engine for Instant Demos)* |
+| **AI Engine** | Google Gemini API (gemini-1.5-flash) |
+| **Auth & Security** | JWT Authentication, bcryptjs, Helmet, Rate Limiting, CORS |
 
 ---
 
-##  Project Structure
+## 📁 Project Structure
 
 ```
-hireready-full/
+HIRE-READY/
+├── package.json             # Root zero-config deployment manifest
+├── README.md                # Project documentation
 ├── backend/
-│   ├── models/
-│   │   ├── User.js          # User model with security features
-│   │   └── Session.js       # Interview session model
-│   ├── routes/
-│   │   ├── auth.js          # Register, login, logout, /me
-│   │   ├── users.js         # Profile, settings, resume, stats
-│   │   ├── interview.js     # Start, message, end, code review, anti-cheat
-│   │   ├── evaluation.js    # Fetch evaluations
-│   │   ├── leaderboard.js   # Rankings with filters
-│   │   └── resources.js     # Curated learning resources
-│   ├── middleware/
-│   │   └── auth.js          # JWT protect middleware
-│   ├── .env.example         # Environment variables template
+│   ├── models/              # User and Session data models
+│   ├── routes/              # Auth, Users, Interview, Evaluation, Leaderboard, Resources
+│   ├── middleware/          # Auth protect middleware
+│   ├── utils/               # MemoryStore fallback engine
 │   ├── package.json
-│   └── server.js            # Main Express server
+│   └── server.js            # Express application server
 └── frontend/
-    ├── css/
-    │   └── main.css         # Full design system, dark + light mode
-    ├── js/
-    │   └── api.js           # API client, auth manager, theme, toasts
-    ├── pages/
-    │   ├── login.html
-    │   ├── register.html
-    │   ├── dashboard.html
-    │   ├── interview.html
-    │   ├── evaluation.html
-    │   ├── leaderboard.html
-    │   ├── resources.html
-    │   └── settings.html
+    ├── css/                 # Design system (Dark + Light mode)
+    ├── js/                  # API client, Auth manager, Theme toggle, Toast system
+    ├── pages/               # Dashboard, Practice, Evaluation, Leaderboard, Resources, Settings
     └── index.html           # Landing page
 ```
 
 ---
 
-## ⚙️ Setup Instructions
+## 🚀 Instant Quickstart & Local Setup
 
 ### Prerequisites
 - Node.js 18+
-- MongoDB (local or MongoDB Atlas)
-- Gemini 1.5 Flash API Key (for AI features)
 
-### 1. Install backend dependencies
-
+### 1. Clone the repository
 ```bash
-cd backend
+git clone https://github.com/aditya25bce11333-byte/HIRE-READY.git
+cd HIRE-READY
+```
+
+### 2. Install & Run
+```bash
 npm install
-```
-
-### 2. Configure environment variables
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and fill in:
-```
-MONGODB_URI=mongodb://localhost:27017/hireready
-JWT_SECRET=your_very_long_random_secret_here
-ANTHROPIC_API_KEY=sk-ant-xxxx...
-```
-
-### 3. Start the server
-
-```bash
-# Development
-npm run dev
-
-# Production
 npm start
 ```
-
-The server runs on **http://localhost:5000** and serves the frontend automatically.
-
-### 4. Open in browser
-
-Visit: **http://localhost:5000**
+The application will boot at **http://localhost:5000**.
 
 ---
 
-##  Features Implemented
+## ✨ Features Implemented
 
-### From PPT Slides
--  AI-Based Mock Interview Sessions (Claude API)
--  Role-Based Interview Simulation (SDE, Data Scientist, DevOps, PM)
--  Technical + HR Rounds
--  Adaptive Follow-up Questions (context-aware AI)
--  Real-time AI Feedback & Scoring
--  Resume Upload & Resume-Based Questions
--  Difficulty Modes (Easy / Medium / Hard)
--  Pressure Mode (AI interruptions, time pressure)
--  Coding Editor (Monaco-style) with AI Code Review
--  Anti-Cheat Detection (tab switching, paste monitoring)
--  AI Evaluation System (technical, communication, confidence)
--  Filler Word Detection (um, uh, like, so, etc.)
--  Confidence Analysis + Sentiment Analysis
--  Weakness Identification + Role Readiness Score
--  Improvement Roadmap (personalized learning path)
--  Leaderboard with Role-based Rankings
--  Daily Streak System
--  Curated Resources (categorized by role, topic, difficulty)
--  Performance Tracking over sessions
+### 🎯 Core Interview Simulation
+- **Role-Based Interview Tracks**: SDE, Data Scientist, DevOps, Product Manager
+- **Round Types**: Technical & HR Rounds with STAR method evaluations
+- **Adaptive AI Follow-Ups**: Context-aware follow-up question engine
+- **Pressure Mode**: Simulates real-time stress with interruptions and strict time pressure
+- **Coding Editor & AI Code Review**: Monaco-style editor with automated code evaluation
+- **Anti-Cheat Detection**: Monitors tab switches, window blur events, and copy-paste attempts
 
-### UI/UX
--  Dark Mode (default, matching the slides)
--  Light Mode (same color palette as attached screenshots)
--  Smooth theme switching
--  Responsive design (mobile-friendly)
--  Animated stats, toasts, modals
-
-### Security
--  Password hashing (bcrypt, 12 rounds)
--  JWT authentication (7-day expiry)
--  HTTP-only cookies
--  Account lockout (5 failed attempts → 15 min lock)
--  Rate limiting (general: 200/15min, auth: 20/15min, AI: 60/min)
--  Input validation (express-validator)
--  Helmet security headers
--  CORS protection
--  SQL/NoSQL injection protection (Mongoose sanitization)
--  Passwords never returned in API responses (select: false)
+### 📊 Analytics & Gamification
+- **Instant AI Feedback**: Scores technical accuracy, communication, and confidence
+- **Filler Word Detection**: Analyzes speech/text for unnecessary filler words (`um`, `uh`, `basically`, etc.)
+- **Personalized Improvement Roadmap**: Custom recommended learning steps after each session
+- **Global Leaderboard**: Role-filtered user rankings and point system
+- **Daily Streak System**: Tracks continuous practice days
 
 ---
 
-##  Team — The Fifth Bit
+## 👥 Team — The Fifth Bit
 
-- Khyati Singh (25BCE11336)
-- Aayushi (25BCE10206)
-- Aditya Singh (25BCE1133)
-- Sayan Modal (25BAI11532)
-- Yashraj (25BAI11556)
+- Khyati Singh (`25BCE11336`)
+- Aayushi (`25BCE10206`)
+- Aditya Singh (`25BCE1133`)
+- Sayan Mondal (`25BAI11532`)
+- Yashraj (`25BAI11556`)
 
 ---
 
-##  Future Scope (from slides)
+## 🔗 Repository & Live Deployment
 
-- Company-specific interview modes
-- Voice & emotion detection AI
-- Recruiter dashboard & analytics
-- Referral system for top performers
-- Mobile app (React Native)
+- **GitHub Repository**: [github.com/aditya25bce11333-byte/HIRE-READY](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
