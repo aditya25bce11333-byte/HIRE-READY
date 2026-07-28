@@ -40,14 +40,26 @@ router.post('/register', [
 
   try {
     const { name, email, password, targetRole } = req.body;
+    const mongoose = require('mongoose');
 
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ error: 'Email already registered.' });
+    if (mongoose.connection.readyState === 1) {
+      const existing = await User.findOne({ email });
+      if (existing) return res.status(400).json({ error: 'Email already registered.' });
 
-    const user = await User.create({ name, email, password, targetRole: targetRole || 'SDE' });
-    sendToken(user, 201, res);
+      const user = await User.create({ name, email, password, targetRole: targetRole || 'SDE' });
+      return sendToken(user, 201, res);
+    } else {
+      // In-memory fallback mode
+      const { memoryStore } = require('../utils/memoryStore');
+      const existing = memoryStore.findUserByEmail(email);
+      if (existing) return res.status(400).json({ error: 'Email already registered.' });
+
+      const user = await memoryStore.createUser({ name, email, password, targetRole });
+      return sendToken(user, 201, res);
+    }
   } catch (err) {
-    res.status(500).json({ error: 'Registration failed. Please try again.' });
+    console.error('Registration error:', err);
+    res.status(500).json({ error: err.message || 'Registration failed. Please try again.' });
   }
 });
 
@@ -61,33 +73,46 @@ router.post('/login', [
 
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email }).select('+password');
+    const mongoose = require('mongoose');
+
+    let user;
+    if (mongoose.connection.readyState === 1) {
+      user = await User.findOne({ email }).select('+password');
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      user = memoryStore.findUserByEmail(email);
+    }
 
     if (!user) return res.status(401).json({ error: 'Invalid email or password.' });
 
-    if (user.isLocked()) {
+    if (user.isLocked && user.isLocked()) {
       return res.status(423).json({ error: 'Account locked. Try again in 15 minutes.' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      user.loginAttempts = (user.loginAttempts || 0) + 1;
-      if (user.loginAttempts >= 5) {
-        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
-        user.loginAttempts = 0;
+      if (user.loginAttempts !== undefined) {
+        user.loginAttempts = (user.loginAttempts || 0) + 1;
+        if (user.loginAttempts >= 5) {
+          user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+          user.loginAttempts = 0;
+        }
+        if (user.save) await user.save();
       }
-      await user.save();
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
     // Reset attempts on success
-    user.loginAttempts = 0;
-    user.lockUntil = undefined;
-    await user.save();
+    if (user.loginAttempts !== undefined) {
+      user.loginAttempts = 0;
+      user.lockUntil = undefined;
+      if (user.save) await user.save();
+    }
 
     sendToken(user, 200, res);
   } catch (err) {
-    res.status(500).json({ error: 'Login failed. Please try again.' });
+    console.error('Login error:', err);
+    res.status(500).json({ error: err.message || 'Login failed. Please try again.' });
   }
 });
 

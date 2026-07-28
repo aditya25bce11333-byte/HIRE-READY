@@ -20,12 +20,19 @@ const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_for_dev');
 
     // Get user
-    const user = await User.findById(decoded.id).select('-password');
+    let user;
+    if (require('mongoose').connection.readyState === 1) {
+      user = await User.findById(decoded.id).select('-password');
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      user = memoryStore.findUserById(decoded.id);
+    }
+
     if (!user) {
       return res.status(401).json({ error: 'User not found.' });
     }
 
-    if (user.isLocked()) {
+    if (user.isLocked && user.isLocked()) {
       return res.status(423).json({ error: 'Account temporarily locked.' });
     }
 

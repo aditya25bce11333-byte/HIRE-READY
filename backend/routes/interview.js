@@ -282,17 +282,32 @@ Rules:
 router.post('/start', protect, async (req, res) => {
   try {
     const { role, difficulty, pressureMode, rounds } = req.body;
-    const user = await User.findById(req.user._id);
+    const mongoose = require('mongoose');
+    const user = req.user;
 
-    const session = await Session.create({
-      user: req.user._id,
-      role: role || user.targetRole,
-      difficulty: difficulty || 'Medium',
-      pressureMode: !!pressureMode,
-      rounds: rounds || ['Technical', 'HR'],
-      messages: [],
-      status: 'in-progress',
-    });
+    let session;
+    if (mongoose.connection.readyState === 1) {
+      session = await Session.create({
+        user: req.user._id,
+        role: role || user.targetRole,
+        difficulty: difficulty || 'Medium',
+        pressureMode: !!pressureMode,
+        rounds: rounds || ['Technical', 'HR'],
+        messages: [],
+        status: 'in-progress',
+      });
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      session = memoryStore.createSession({
+        user: req.user._id,
+        role: role || user.targetRole,
+        difficulty: difficulty || 'Medium',
+        pressureMode: !!pressureMode,
+        rounds: rounds || ['Technical', 'HR'],
+        messages: [],
+        status: 'in-progress',
+      });
+    }
 
     // Generate opening question
     const systemPrompt = buildInterviewerSystem(
@@ -308,7 +323,7 @@ router.post('/start', protect, async (req, res) => {
     ], systemPrompt, 1000, { role: role || user.targetRole, round: (rounds || ['Technical'])[0] });
 
     session.messages.push({ role: 'assistant', content: openingMsg });
-    await session.save();
+    if (session.save) await session.save();
 
     res.json({ success: true, sessionId: session._id, message: openingMsg });
   } catch (err) {
@@ -322,12 +337,20 @@ router.post('/message', protect, async (req, res) => {
   try {
     const { sessionId, content } = req.body;
     if (!content?.trim()) return res.status(400).json({ error: 'Message cannot be empty.' });
+    const mongoose = require('mongoose');
 
-    const session = await Session.findOne({ _id: sessionId, user: req.user._id });
+    let session;
+    if (mongoose.connection.readyState === 1) {
+      session = await Session.findOne({ _id: sessionId, user: req.user._id });
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      session = memoryStore.findSessionById(sessionId);
+    }
+
     if (!session) return res.status(404).json({ error: 'Session not found.' });
     if (session.status !== 'in-progress') return res.status(400).json({ error: 'Session is not active.' });
 
-    const user = await User.findById(req.user._id);
+    const user = req.user;
 
     // Detect filler words
     const fillerWords = ['um', 'uh', 'like', 'so', 'basically', 'actually', 'literally', 'you know'];
@@ -349,7 +372,7 @@ router.post('/message', protect, async (req, res) => {
 
     const aiResponse = await callClaude(claudeMsgs, systemPrompt, 1000, { role: session.role, round: session.rounds[0] || 'Technical' });
     session.messages.push({ role: 'assistant', content: aiResponse });
-    await session.save();
+    if (session.save) await session.save();
 
     res.json({ success: true, message: aiResponse, fillerWords: detected });
   } catch (err) {
@@ -362,7 +385,15 @@ router.post('/message', protect, async (req, res) => {
 router.post('/end', protect, async (req, res) => {
   try {
     const { sessionId, duration } = req.body;
-    const session = await Session.findOne({ _id: sessionId, user: req.user._id });
+    const mongoose = require('mongoose');
+
+    let session;
+    if (mongoose.connection.readyState === 1) {
+      session = await Session.findOne({ _id: sessionId, user: req.user._id });
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      session = memoryStore.findSessionById(sessionId);
+    }
     if (!session) return res.status(404).json({ error: 'Session not found.' });
 
     session.status = 'completed';
@@ -417,14 +448,14 @@ Return ONLY valid JSON (no markdown) with this exact structure:
     }
 
     session.evaluation = evaluation;
-    await session.save();
+    if (session.save) await session.save();
 
     // Update user stats
-    const user = await User.findById(req.user._id);
-    user.totalSessions += 1;
-    user.totalPoints += Math.floor(evaluation.overallScore * 10);
-    user.updateStreak();
-    await user.save();
+    const user = req.user;
+    user.totalSessions = (user.totalSessions || 0) + 1;
+    user.totalPoints = (user.totalPoints || 0) + Math.floor(evaluation.overallScore * 10);
+    if (user.updateStreak) user.updateStreak();
+    if (user.save) await user.save();
 
     res.json({ success: true, evaluation, sessionId: session._id });
   } catch (err) {
@@ -453,10 +484,17 @@ Provide a concise review (3-4 sentences) covering: correctness, efficiency, edge
 
     // Save to session if provided
     if (sessionId) {
-      await Session.findOneAndUpdate(
-        { _id: sessionId, user: req.user._id },
-        { $push: { codeSubmissions: { language, code, question, aiReview: review } } }
-      );
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) {
+        await Session.findOneAndUpdate(
+          { _id: sessionId, user: req.user._id },
+          { $push: { codeSubmissions: { language, code, question, aiReview: review } } }
+        );
+      } else {
+        const { memoryStore } = require('../utils/memoryStore');
+        const session = memoryStore.findSessionById(sessionId);
+        if (session) session.codeSubmissions.push({ language, code, question, aiReview: review });
+      }
     }
 
     res.json({ success: true, review });
@@ -468,10 +506,17 @@ Provide a concise review (3-4 sentences) covering: correctness, efficiency, edge
 // GET /api/interview/sessions
 router.get('/sessions', protect, async (req, res) => {
   try {
-    const sessions = await Session.find({ user: req.user._id })
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .select('-messages -codeSubmissions');
+    const mongoose = require('mongoose');
+    let sessions;
+    if (mongoose.connection.readyState === 1) {
+      sessions = await Session.find({ user: req.user._id })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .select('-messages -codeSubmissions');
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      sessions = memoryStore.getUserSessions(req.user._id);
+    }
     res.json({ success: true, sessions });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch sessions.' });
@@ -481,7 +526,14 @@ router.get('/sessions', protect, async (req, res) => {
 // GET /api/interview/sessions/:id
 router.get('/sessions/:id', protect, async (req, res) => {
   try {
-    const session = await Session.findOne({ _id: req.params.id, user: req.user._id });
+    const mongoose = require('mongoose');
+    let session;
+    if (mongoose.connection.readyState === 1) {
+      session = await Session.findOne({ _id: req.params.id, user: req.user._id });
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      session = memoryStore.findSessionById(req.params.id);
+    }
     if (!session) return res.status(404).json({ error: 'Session not found.' });
     res.json({ success: true, session });
   } catch (err) {
@@ -493,20 +545,32 @@ router.get('/sessions/:id', protect, async (req, res) => {
 router.post('/anti-cheat', protect, async (req, res) => {
   try {
     const { sessionId, event } = req.body; // event: 'tab-switch' | 'paste'
-    const update = {};
-    if (event === 'tab-switch') update['antiCheat.tabSwitches'] = 1;
-    if (event === 'paste') update['antiCheat.pasteAttempts'] = 1;
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      const update = {};
+      if (event === 'tab-switch') update['antiCheat.tabSwitches'] = 1;
+      if (event === 'paste') update['antiCheat.pasteAttempts'] = 1;
 
-    await Session.findOneAndUpdate(
-      { _id: sessionId, user: req.user._id },
-      { $inc: update }
-    );
+      await Session.findOneAndUpdate(
+        { _id: sessionId, user: req.user._id },
+        { $inc: update }
+      );
 
-    // Flag if too many violations
-    const session = await Session.findById(sessionId);
-    if (session && (session.antiCheat.tabSwitches >= 3 || session.antiCheat.pasteAttempts >= 3)) {
-      session.antiCheat.flagged = true;
-      await session.save();
+      const session = await Session.findById(sessionId);
+      if (session && (session.antiCheat.tabSwitches >= 3 || session.antiCheat.pasteAttempts >= 3)) {
+        session.antiCheat.flagged = true;
+        await session.save();
+      }
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      const session = memoryStore.findSessionById(sessionId);
+      if (session) {
+        if (event === 'tab-switch') session.antiCheat.tabSwitches += 1;
+        if (event === 'paste') session.antiCheat.pasteAttempts += 1;
+        if (session.antiCheat.tabSwitches >= 3 || session.antiCheat.pasteAttempts >= 3) {
+          session.antiCheat.flagged = true;
+        }
+      }
     }
 
     res.json({ success: true });

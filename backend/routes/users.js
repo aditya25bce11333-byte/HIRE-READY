@@ -21,13 +21,22 @@ const upload = multer({
 // GET /api/users/profile
 router.get('/profile', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    const sessions = await Session.find({ user: req.user._id, status: 'completed' })
-      .sort({ completedAt: -1 }).limit(5).select('role difficulty evaluation.overallScore duration completedAt');
+    const mongoose = require('mongoose');
+    let user = req.user;
+    let sessions = [];
+
+    if (mongoose.connection.readyState === 1) {
+      user = await User.findById(req.user._id);
+      sessions = await Session.find({ user: req.user._id, status: 'completed' })
+        .sort({ completedAt: -1 }).limit(5).select('role difficulty evaluation.overallScore duration completedAt');
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      sessions = memoryStore.getUserSessions(req.user._id).filter(s => s.status === 'completed');
+    }
 
     res.json({
       success: true,
-      user: user.toSafeObject(),
+      user: user.toSafeObject ? user.toSafeObject() : user,
       recentSessions: sessions,
     });
   } catch (err) {
@@ -111,8 +120,17 @@ router.post('/resume', protect, upload.single('resume'), async (req, res) => {
 // GET /api/users/stats
 router.get('/stats', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    const sessions = await Session.find({ user: req.user._id, status: 'completed' });
+    const mongoose = require('mongoose');
+    let user = req.user;
+    let sessions = [];
+
+    if (mongoose.connection.readyState === 1) {
+      user = await User.findById(req.user._id);
+      sessions = await Session.find({ user: req.user._id, status: 'completed' });
+    } else {
+      const { memoryStore } = require('../utils/memoryStore');
+      sessions = memoryStore.getUserSessions(req.user._id).filter(s => s.status === 'completed');
+    }
 
     const avgScore = sessions.length
       ? Math.round(sessions.reduce((a, s) => a + (s.evaluation?.overallScore || 0), 0) / sessions.length)
@@ -132,9 +150,9 @@ router.get('/stats', protect, async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalSessions: user.totalSessions,
-        totalPoints: user.totalPoints,
-        streak: user.streak,
+        totalSessions: user.totalSessions || 0,
+        totalPoints: user.totalPoints || 0,
+        streak: user.streak || 1,
         avgScore,
         roleBreakdown,
         recentScores,
