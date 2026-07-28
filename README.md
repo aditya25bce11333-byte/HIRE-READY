@@ -2,8 +2,11 @@
 
 > *"From Practice to Placement"* — The Fifth Bit Hackathon 2026
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-brightgreen?style=for-the-badge&logo=render)](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
+[![Live Web App](https://img.shields.io/badge/🌐_Live_App-hire--ready--ehmg.onrender.com-brightgreen?style=for-the-badge&logo=render)](https://hire-ready-ehmg.onrender.com)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
+
+### 🚀 Live Web App URL
+👉 **[https://hire-ready-ehmg.onrender.com](https://hire-ready-ehmg.onrender.com)** *(Click to launch live app on any device!)*
 
 ---
 
@@ -47,23 +50,19 @@ HIRE-READY/
 
 ---
 
-## 🚀 Instant Quickstart & Local Setup
+## 🌐 Instant Access & Deployment
 
-### Prerequisites
-- Node.js 18+
+- **Live Production URL**: [https://hire-ready-ehmg.onrender.com](https://hire-ready-ehmg.onrender.com)
+- **Source Code**: [GitHub Repository](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
 
-### 1. Clone the repository
+### Local Setup (Optional)
 ```bash
 git clone https://github.com/aditya25bce11333-byte/HIRE-READY.git
 cd HIRE-READY
-```
-
-### 2. Install & Run
-```bash
 npm install
 npm start
 ```
-The application will boot at **http://localhost:5000**.
+The application will run locally at **http://localhost:5000**.
 
 ---
 
@@ -93,9 +92,3 @@ The application will boot at **http://localhost:5000**.
 - Aditya Singh (`25BCE1133`)
 - Sayan Mondal (`25BAI11532`)
 - Yashraj (`25BAI11556`)
-
----
-
-## 🔗 Repository & Live Deployment
-
-- **GitHub Repository**: [github.com/aditya25bce11333-byte/HIRE-READY](https://github.com/aditya25bce11333-byte/HIRE-READY/tree/main)
