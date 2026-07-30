@@ -37,6 +37,35 @@
     .typing-dot:nth-child(2){animation-delay:0.2s;}
     .typing-dot:nth-child(3){animation-delay:0.4s;}
     @keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+    #mic-btn{
+      display:flex;align-items:center;justify-content:center;
+      width:42px;height:42px;padding:0;flex-shrink:0;
+      background:var(--surface-2);border:1px solid var(--border);
+      border-radius:var(--radius-md);font-size:1.1rem;cursor:pointer;
+      transition:all var(--transition);color:var(--text);
+    }
+    #mic-btn:hover:not(:disabled){background:var(--surface);border-color:var(--brand);}
+    #mic-btn.recording{
+      background:rgba(239,68,68,0.15);border-color:var(--red);color:var(--red);
+      animation:micPulse 1.4s infinite;
+    }
+    @keyframes micPulse{
+      0%{box-shadow:0 0 0 0 rgba(239,68,68,0.45);}
+      70%{box-shadow:0 0 0 9px rgba(239,68,68,0);}
+      100%{box-shadow:0 0 0 0 rgba(239,68,68,0);}
+    }
+    #voice-status{
+      display:none;align-items:center;gap:8px;
+      padding:7px 20px;border-top:1px solid var(--border);
+      background:var(--surface-2);font-size:0.75rem;color:var(--text-3);
+    }
+    #voice-status.active{display:flex;}
+    .voice-dot{
+      width:8px;height:8px;border-radius:50%;background:var(--red);
+      animation:micPulse 1.4s infinite;flex-shrink:0;
+    }
+    #voice-interim{color:var(--text-2);font-style:italic;}
   </style>
 </head>
 <body>
@@ -93,22 +122,19 @@
             <span id="filler-chips"></span>
           </div>
 
-          <!-- Live Voice Dictation Status indicator -->
-          <div id="voice-status-bar" style="padding:6px 20px;border-top:1px solid var(--border);display:none;background:rgba(59,130,246,0.1);align-items:center;gap:8px;">
-            <span class="badge badge-brand" style="font-size:0.7rem;">🎙️ Live Voice Transcribing</span>
-            <span style="font-size:0.72rem;color:var(--text-3);" id="voice-live-snippet">Speak into your mic—your words will appear below in real-time.</span>
+          <!-- Live voice transcription status -->
+          <div id="voice-status">
+            <span class="voice-dot"></span>
+            <span>🎙️ Live Voice Transcribing — speak into your mic, your words appear below in real-time.</span>
+            <span id="voice-interim"></span>
           </div>
 
           <div class="chat-input-area">
+            <button class="btn" id="mic-btn" onclick="toggleVoice()" title="Voice input" disabled>🎤</button>
             <textarea class="chat-input" id="user-input" rows="2"
-              placeholder="Type or speak your answer... (Enter to send, Shift+Enter for new line)"
+              placeholder="Type your answer here... (Enter to send, Shift+Enter for new line)"
               disabled></textarea>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="btn btn-secondary" id="voice-btn" onclick="toggleVoiceToText()" disabled title="Click to speak your answer with Voice-to-Text" style="padding:8px 12px;font-size:0.85rem;display:inline-flex;align-items:center;gap:6px;">
-                <span id="voice-icon">🎤</span> <span id="voice-text">Voice Input</span>
-              </button>
-              <button class="btn btn-primary" id="send-btn" onclick="sendMsg()" disabled>Send</button>
-            </div>
+            <button class="btn btn-primary" id="send-btn" onclick="sendMsg()" disabled>Send</button>
           </div>
         </div>
 
@@ -151,55 +177,6 @@
 
         <!-- SIDE PANEL -->
         <div class="side-panel">
-          <!-- Webcam & AI Behavioral Suite Card -->
-          <div class="panel-card" id="media-card" style="display:none;">
-            <div class="flex items-center justify-between mb-2">
-              <h4 style="margin:0;font-size:0.85rem;font-weight:700;">🎥 AI Behavioral Suite</h4>
-              <span class="badge badge-green" id="cam-status" style="font-size:0.65rem;">● Live AI Feed</span>
-            </div>
-            
-            <!-- Video Feed Box -->
-            <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px;border:1px solid var(--border);">
-              <video id="webcam-preview" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
-              <!-- Overlay dynamic metrics -->
-              <div style="position:absolute;bottom:6px;left:6px;right:6px;display:flex;justify-content:between;align-items:center;background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);padding:4px 8px;border-radius:var(--radius-sm);font-size:0.7rem;color:#fff;">
-                <span id="cam-emotion-badge">😊 Confident</span>
-                <span id="cam-eye-status" style="margin-left:auto;color:var(--green);font-weight:600;">Eye Contact: Focused</span>
-              </div>
-              <!-- Mic Volume Level Bar -->
-              <div style="position:absolute;top:8px;right:8px;width:6px;height:40px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;">
-                <div id="mic-level-bar" style="width:100%;height:0%;background:var(--green);position:absolute;bottom:0;transition:height 0.1s linear;"></div>
-              </div>
-            </div>
-
-            <!-- Real-time Gauges -->
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <!-- Dynamic Confidence Gauge -->
-              <div>
-                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
-                  <span class="text-muted">Dynamic Confidence Score</span>
-                  <span class="font-bold text-brand" id="gauge-conf-val">85%</span>
-                </div>
-                <div class="progress-bar" style="height:6px;"><div class="progress-fill" id="gauge-conf-bar" style="width:85%;"></div></div>
-              </div>
-
-              <!-- Eye Contact % -->
-              <div>
-                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
-                  <span class="text-muted">Eye Contact Ratio</span>
-                  <span class="font-bold text-green" id="gauge-eye-val">92%</span>
-                </div>
-                <div class="progress-bar" style="height:6px;"><div class="progress-fill green" id="gauge-eye-bar" style="width:92%;"></div></div>
-              </div>
-
-              <!-- Speaking Pace WPM -->
-              <div class="flex items-center justify-between" style="font-size:0.75rem;padding:4px 8px;background:var(--surface-2);border-radius:var(--radius-sm);">
-                <span class="text-muted">Speaking Pace</span>
-                <span class="font-bold" id="gauge-wpm-val">Optimal (135 WPM)</span>
-              </div>
-            </div>
-          </div>
-
           <!-- Setup Card -->
           <div class="panel-card" id="setup-card">
             <h4>🎯 Interview Setup</h4>
@@ -303,7 +280,6 @@
     </main>
   </div>
 
-  <script src="../js/media-analyzer.js"></script>
   <script src="../js/api.js"></script>
   <script>
     if (!Auth.requireAuth()) throw new Error();
@@ -321,7 +297,6 @@
     let pasteAttempts = 0;
     let isRunning = false;
     let selectedRole = 'SDE';
-    let dictationPrefix = '';
 
     // Pre-set from URL params
     const params = new URLSearchParams(window.location.search);
@@ -477,67 +452,17 @@
         document.getElementById('timer-card').style.display = 'block';
         document.getElementById('ac-card').style.display = 'block';
         document.getElementById('stats-card').style.display = 'block';
-        document.getElementById('media-card').style.display = 'block';
         document.getElementById('end-btn').disabled = false;
         document.getElementById('user-input').disabled = false;
         document.getElementById('send-btn').disabled = false;
+        document.getElementById('mic-btn').disabled = false;
         document.getElementById('round-status').textContent = `● ${rounds[0]} Round — ${selectedRole}`;
         document.getElementById('round-label').textContent = `${rounds[0]} Round`;
         document.getElementById('status-badge').textContent = '● Live';
         document.getElementById('status-badge').className = 'badge badge-green';
 
-        // Start AI Media & Behavioral Analyzer
-        const videoElem = document.getElementById('webcam-preview');
-        const inputElem = document.getElementById('user-input');
-
-        if (window.mediaAnalyzer) {
-          window.mediaAnalyzer.start(
-            videoElem,
-            (m) => {
-              const confVal = document.getElementById('gauge-conf-val');
-              const confBar = document.getElementById('gauge-conf-bar');
-              if (confVal) confVal.textContent = `${m.confidenceScore}%`;
-              if (confBar) confBar.style.width = `${m.confidenceScore}%`;
-
-              const eyeVal = document.getElementById('gauge-eye-val');
-              const eyeBar = document.getElementById('gauge-eye-bar');
-              if (eyeVal) eyeVal.textContent = `${m.eyeContactPct}%`;
-              if (eyeBar) eyeBar.style.width = `${m.eyeContactPct}%`;
-
-              const eyeStatus = document.getElementById('cam-eye-status');
-              if (eyeStatus) {
-                eyeStatus.textContent = m.eyeContactStatus;
-                eyeStatus.style.color = m.eyeContactPct >= 70 ? 'var(--green)' : 'var(--yellow)';
-              }
-
-              const emoBadge = document.getElementById('cam-emotion-badge');
-              if (emoBadge) emoBadge.textContent = m.facialEmotion;
-
-              const wpmVal = document.getElementById('gauge-wpm-val');
-              if (wpmVal) wpmVal.textContent = m.speechPaceStatus;
-
-              const micBar = document.getElementById('mic-level-bar');
-              if (micBar) micBar.style.height = `${m.volumeLevel}%`;
-            },
-            (transcriptText, interimText) => {
-              if (!inputElem || !isRunning || inputElem.disabled) return;
-
-              const spokenText = transcriptText || interimText;
-              if (!spokenText) return;
-
-              inputElem.value = dictationPrefix + spokenText;
-
-              const vsBar = document.getElementById('voice-status-bar');
-              const snippet = document.getElementById('voice-live-snippet');
-              if (vsBar) vsBar.style.display = 'flex';
-              if (snippet) snippet.textContent = spokenText;
-            }
-          );
-        }
-
         startTimer();
         document.getElementById('user-input').focus();
-        document.getElementById('voice-btn').disabled = false;
         Toast.success('Interview started! Good luck 🎯');
 
         if (document.getElementById('pressure-toggle').checked) {
@@ -551,30 +476,6 @@
       }
     }
 
-    // ── Voice-to-Text Dictation Engine ─────────────────────────────
-    function toggleVoiceToText() {
-      if (!window.mediaAnalyzer) return;
-
-      window.mediaAnalyzer.isAutoSpeechToText = true;
-      window.mediaAnalyzer.resetSpeechTranscript();
-      dictationPrefix = document.getElementById('user-input').value.trim();
-      if (dictationPrefix) dictationPrefix += ' ';
-
-      window.mediaAnalyzer.startSpeechRecognition();
-
-      const voiceBtn = document.getElementById('voice-btn');
-      const voiceIcon = document.getElementById('voice-icon');
-      const voiceText = document.getElementById('voice-text');
-
-      voiceBtn.style.background = 'var(--red)';
-      voiceBtn.style.borderColor = 'var(--red)';
-      voiceBtn.style.color = '#fff';
-      if (voiceIcon) voiceIcon.textContent = '🎙️';
-      if (voiceText) voiceText.textContent = 'Mic Active';
-
-      Toast.success('🎤 Mic Listening! Speak out loud into your microphone...');
-    }
-
     // ── Send Message ───────────────────────────────────────────────
     async function sendMsg() {
       const input = document.getElementById('user-input');
@@ -585,13 +486,9 @@
       sendBtn.disabled = true;
       input.disabled = true;
       input.value = '';
-      dictationPrefix = '';
 
-      if (window.mediaAnalyzer) {
-        window.mediaAnalyzer.clearSpeechBuffer();
-      }
-      const vsBar = document.getElementById('voice-status-bar');
-      if (vsBar) vsBar.style.display = 'none';
+      // Reset voice transcript baseline so live recognition doesn't repopulate the field we just cleared
+      if (isRecording) { baseText = ''; finalTranscript = ''; }
 
       addMessage('user', content);
       msgCount++;
@@ -630,13 +527,6 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
     });
 
-    document.getElementById('user-input').addEventListener('input', (e) => {
-      if (!window.mediaAnalyzer?.isRecognitionActive) {
-        dictationPrefix = e.target.value;
-        if (window.mediaAnalyzer) window.mediaAnalyzer.resetSpeechTranscript();
-      }
-    });
-
     // ── End Interview ──────────────────────────────────────────────
     let endConfirmTimeout = null;
     async function endInterview() {
@@ -663,30 +553,124 @@
       clearInterval(timerInterval);
       isRunning = false;
 
-      // Extract media metrics & stop media streams
-      let behavioralMetrics = null;
-      if (window.mediaAnalyzer) {
-        behavioralMetrics = window.mediaAnalyzer.getFinalMetrics();
-        window.mediaAnalyzer.stop();
-      }
-
       endBtn.disabled = true;
       endBtn.textContent = 'Evaluating...';
       endBtn.style.background = '';
       endBtn.style.borderColor = '';
       endBtn.style.color = '';
       document.getElementById('send-btn').disabled = true;
-      document.getElementById('voice-btn').disabled = true;
       document.getElementById('user-input').disabled = true;
+      document.getElementById('mic-btn').disabled = true;
+      stopVoice();
       document.getElementById('status-badge').textContent = '● Evaluating...';
 
       try {
-        await api.post('/interview/end', { sessionId, duration: seconds, behavioralMetrics });
+        await api.post('/interview/end', { sessionId, duration: seconds });
         Toast.success('Interview complete! Redirecting to evaluation...');
         setTimeout(() => window.location.href = `evaluation.html?id=${sessionId}`, 1500);
       } catch (err) {
         Toast.error(err.message);
       }
+    }
+
+    // ── Live Voice Input (Web Speech API) ────────────────────────────
+    let recognition = null;
+    let isRecording = false;
+    let baseText = '';         // text already in the box when recording started
+    let finalTranscript = '';  // accumulated finalized speech since recording started
+    let restartTimeout = null;
+
+    function supportsSpeechRecognition() {
+      return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    }
+
+    function buildRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const rec = new SR();
+      rec.continuous = true;       // keep listening across pauses
+      rec.interimResults = true;   // low-latency partial results as you speak
+      rec.lang = 'en-US';
+      rec.maxAlternatives = 1;
+
+      rec.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const chunk = e.results[i][0].transcript;
+          if (e.results[i].isFinal) {
+            finalTranscript += chunk + ' ';
+          } else {
+            interim += chunk;
+          }
+        }
+        const input = document.getElementById('user-input');
+        input.value = (baseText + finalTranscript + interim).replace(/\s+/g, ' ').trimStart();
+        input.scrollTop = input.scrollHeight;
+        document.getElementById('voice-interim').textContent = interim ? `"${interim}"` : '';
+      };
+
+      rec.onerror = (e) => {
+        if (e.error === 'no-speech' || e.error === 'aborted') return; // benign, keep going
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          Toast.error('Microphone access denied. Please allow mic permissions in your browser.');
+          stopVoice();
+          return;
+        }
+        if (e.error === 'network') {
+          Toast.error('Voice recognition network error — retrying...');
+        }
+      };
+
+      // Some browsers (Chrome especially) auto-stop the session after a short
+      // silence even with continuous=true. Silently restart if the user hasn't
+      // clicked stop, so transcription feels continuous with minimal latency.
+      rec.onend = () => {
+        if (isRecording) {
+          restartTimeout = setTimeout(() => {
+            try { rec.start(); } catch (err) { /* already running */ }
+          }, 150);
+        }
+      };
+
+      return rec;
+    }
+
+    function toggleVoice() {
+      if (isRecording) stopVoice(); else startVoice();
+    }
+
+    function startVoice() {
+      const input = document.getElementById('user-input');
+      if (input.disabled) return;
+
+      if (!supportsSpeechRecognition()) {
+        Toast.error('Live voice input isn\'t supported in this browser. Try Chrome or Edge.');
+        return;
+      }
+
+      if (!recognition) recognition = buildRecognition();
+
+      baseText = input.value ? input.value.trim() + ' ' : '';
+      finalTranscript = '';
+      isRecording = true;
+
+      const micBtn = document.getElementById('mic-btn');
+      micBtn.classList.add('recording');
+      micBtn.textContent = '⏹️';
+      document.getElementById('voice-status').classList.add('active');
+
+      try { recognition.start(); } catch (err) { /* already started */ }
+    }
+
+    function stopVoice() {
+      isRecording = false;
+      clearTimeout(restartTimeout);
+      if (recognition) { try { recognition.stop(); } catch (err) {} }
+
+      const micBtn = document.getElementById('mic-btn');
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎤';
+      document.getElementById('voice-status').classList.remove('active');
+      document.getElementById('voice-interim').textContent = '';
     }
 
     // ── Coding Sandbox ─────────────────────────────────────────────
