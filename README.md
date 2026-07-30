@@ -83,12 +83,3 @@ The application will run locally at **http://localhost:5000**.
 - **Global Leaderboard**: Role-filtered user rankings and point system
 - **Daily Streak System**: Tracks continuous practice days
 
----
-
-## 👥 Team — The Fifth Bit
-
-- Khyati Singh (`25BCE11336`)
-- Aayushi (`25BCE10206`)
-- Aditya Singh (`25BCE1133`)
-- Sayan Mondal (`25BAI11532`)
-- Yashraj (`25BAI11556`)
