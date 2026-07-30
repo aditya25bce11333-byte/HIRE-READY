@@ -538,84 +538,27 @@
     }
 
     // ── Voice-to-Text Dictation Engine ─────────────────────────────
-    let voiceRecognition = null;
-    let isVoiceDictating = false;
-
     function toggleVoiceToText() {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRec) {
-        Toast.error('Voice dictation is not supported in this browser. Try Chrome or Edge.');
-        return;
-      }
-
+      if (!window.mediaAnalyzer) return;
+      window.mediaAnalyzer.isAutoSpeechToText = !window.mediaAnalyzer.isAutoSpeechToText;
       const voiceBtn = document.getElementById('voice-btn');
       const voiceIcon = document.getElementById('voice-icon');
       const voiceText = document.getElementById('voice-text');
-      const inputElem = document.getElementById('user-input');
 
-      if (isVoiceDictating) {
-        stopVoiceDictationUI();
-        if (voiceRecognition) {
-          try { voiceRecognition.stop(); } catch (e) {}
-        }
-        Toast.info('Voice dictation stopped.');
-        return;
-      }
-
-      try {
-        voiceRecognition = new SpeechRec();
-        voiceRecognition.continuous = true;
-        voiceRecognition.interimResults = true;
-        voiceRecognition.lang = 'en-US';
-
-        let baseVal = inputElem.value;
-        if (baseVal && !baseVal.endsWith(' ')) baseVal += ' ';
-
-        voiceRecognition.onresult = (event) => {
-          let textAcc = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            textAcc += event.results[i][0].transcript;
-          }
-          inputElem.value = baseVal + textAcc;
-        };
-
-        voiceRecognition.onerror = (e) => {
-          if (e.error === 'not-allowed') {
-            Toast.error('Microphone access denied. Please grant mic permissions in your browser.');
-            stopVoiceDictationUI();
-          }
-        };
-
-        voiceRecognition.onend = () => {
-          if (isVoiceDictating) {
-            try { voiceRecognition.start(); } catch (err) {}
-          } else {
-            stopVoiceDictationUI();
-          }
-        };
-
-        voiceRecognition.start();
-        isVoiceDictating = true;
+      if (window.mediaAnalyzer.isAutoSpeechToText) {
         voiceBtn.style.background = 'var(--red)';
         voiceBtn.style.borderColor = 'var(--red)';
         voiceBtn.style.color = '#fff';
         voiceIcon.textContent = '🎙️';
-        voiceText.textContent = 'Listening...';
-        Toast.success('🎤 Speaking Mode Active! Speak into your mic to transcribe live...');
-      } catch (err) {
-        Toast.error('Failed to start voice input: ' + err.message);
-      }
-    }
-
-    function stopVoiceDictationUI() {
-      isVoiceDictating = false;
-      const voiceBtn = document.getElementById('voice-btn');
-      if (voiceBtn) {
+        voiceText.textContent = 'Voice Input: ON';
+        Toast.success('🎤 Live Voice Transcribing ACTIVE — speak into your mic!');
+      } else {
         voiceBtn.style.background = '';
         voiceBtn.style.borderColor = '';
         voiceBtn.style.color = '';
-        document.getElementById('voice-icon').textContent = '🎤';
-        document.getElementById('voice-text').textContent = 'Voice Input';
+        voiceIcon.textContent = '🎤';
+        voiceText.textContent = 'Voice Paused';
+        Toast.info('Voice dictation paused.');
       }
     }
 
@@ -630,9 +573,8 @@
       input.disabled = true;
       input.value = '';
 
-      if (isVoiceDictating) {
-        stopVoiceDictationUI();
-        if (voiceRecognition) try { voiceRecognition.stop(); } catch (e) {}
+      if (window.mediaAnalyzer) {
+        window.mediaAnalyzer.clearSpeechBuffer();
       }
 
       addMessage('user', content);
@@ -697,8 +639,6 @@
 
       clearInterval(timerInterval);
       isRunning = false;
-      stopVoiceDictationUI();
-      if (voiceRecognition) try { voiceRecognition.stop(); } catch (e) {}
 
       // Extract media metrics & stop media streams
       let behavioralMetrics = null;
