@@ -95,9 +95,14 @@
 
           <div class="chat-input-area">
             <textarea class="chat-input" id="user-input" rows="2"
-              placeholder="Type your answer here... (Enter to send, Shift+Enter for new line)"
+              placeholder="Type or speak your answer... (Enter to send, Shift+Enter for new line)"
               disabled></textarea>
-            <button class="btn btn-primary" id="send-btn" onclick="sendMsg()" disabled>Send</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn btn-secondary" id="voice-btn" onclick="toggleVoiceToText()" disabled title="Click to speak your answer with Voice-to-Text" style="padding:8px 12px;font-size:0.85rem;display:inline-flex;align-items:center;gap:6px;">
+                <span id="voice-icon">🎤</span> <span id="voice-text">Voice Input</span>
+              </button>
+              <button class="btn btn-primary" id="send-btn" onclick="sendMsg()" disabled>Send</button>
+            </div>
           </div>
         </div>
 
@@ -140,6 +145,55 @@
 
         <!-- SIDE PANEL -->
         <div class="side-panel">
+          <!-- Webcam & AI Behavioral Suite Card -->
+          <div class="panel-card" id="media-card" style="display:none;">
+            <div class="flex items-center justify-between mb-2">
+              <h4 style="margin:0;font-size:0.85rem;font-weight:700;">🎥 AI Behavioral Suite</h4>
+              <span class="badge badge-green" id="cam-status" style="font-size:0.65rem;">● Live AI Feed</span>
+            </div>
+            
+            <!-- Video Feed Box -->
+            <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px;border:1px solid var(--border);">
+              <video id="webcam-preview" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+              <!-- Overlay dynamic metrics -->
+              <div style="position:absolute;bottom:6px;left:6px;right:6px;display:flex;justify-content:between;align-items:center;background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);padding:4px 8px;border-radius:var(--radius-sm);font-size:0.7rem;color:#fff;">
+                <span id="cam-emotion-badge">😊 Confident</span>
+                <span id="cam-eye-status" style="margin-left:auto;color:var(--green);font-weight:600;">Eye Contact: Focused</span>
+              </div>
+              <!-- Mic Volume Level Bar -->
+              <div style="position:absolute;top:8px;right:8px;width:6px;height:40px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;">
+                <div id="mic-level-bar" style="width:100%;height:0%;background:var(--green);position:absolute;bottom:0;transition:height 0.1s linear;"></div>
+              </div>
+            </div>
+
+            <!-- Real-time Gauges -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <!-- Dynamic Confidence Gauge -->
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
+                  <span class="text-muted">Dynamic Confidence Score</span>
+                  <span class="font-bold text-brand" id="gauge-conf-val">85%</span>
+                </div>
+                <div class="progress-bar" style="height:6px;"><div class="progress-fill" id="gauge-conf-bar" style="width:85%;"></div></div>
+              </div>
+
+              <!-- Eye Contact % -->
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
+                  <span class="text-muted">Eye Contact Ratio</span>
+                  <span class="font-bold text-green" id="gauge-eye-val">92%</span>
+                </div>
+                <div class="progress-bar" style="height:6px;"><div class="progress-fill green" id="gauge-eye-bar" style="width:92%;"></div></div>
+              </div>
+
+              <!-- Speaking Pace WPM -->
+              <div class="flex items-center justify-between" style="font-size:0.75rem;padding:4px 8px;background:var(--surface-2);border-radius:var(--radius-sm);">
+                <span class="text-muted">Speaking Pace</span>
+                <span class="font-bold" id="gauge-wpm-val">Optimal (135 WPM)</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Setup Card -->
           <div class="panel-card" id="setup-card">
             <h4>🎯 Interview Setup</h4>
@@ -235,53 +289,6 @@
                   <span class="text-xs text-muted">Avg Response</span>
                   <span class="text-xs font-bold" id="stat-avglen">—</span>
                 </div>
-              </div>
-            </div>
-          <!-- Webcam & AI Behavioral Suite Card -->
-          <div class="panel-card" id="media-card" style="display:none;">
-            <div class="flex items-center justify-between mb-2">
-              <h4 style="margin:0;font-size:0.85rem;font-weight:700;">🎥 AI Behavioral Suite</h4>
-              <span class="badge badge-green" id="cam-status" style="font-size:0.65rem;">● Live AI Feed</span>
-            </div>
-            
-            <!-- Video Feed Box -->
-            <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px;border:1px solid var(--border);">
-              <video id="webcam-preview" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
-              <!-- Overlay dynamic metrics -->
-              <div style="position:absolute;bottom:6px;left:6px;right:6px;display:flex;justify-content:between;align-items:center;background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);padding:4px 8px;border-radius:var(--radius-sm);font-size:0.7rem;color:#fff;">
-                <span id="cam-emotion-badge">😊 Confident</span>
-                <span id="cam-eye-status" style="margin-left:auto;color:var(--green);font-weight:600;">Eye Contact: Focused</span>
-              </div>
-              <!-- Mic Volume Level Bar -->
-              <div style="position:absolute;top:8px;right:8px;width:6px;height:40px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;">
-                <div id="mic-level-bar" style="width:100%;height:0%;background:var(--green);position:absolute;bottom:0;transition:height 0.1s linear;"></div>
-              </div>
-            </div>
-
-            <!-- Real-time Gauges -->
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <!-- Dynamic Confidence Gauge -->
-              <div>
-                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
-                  <span class="text-muted">Dynamic Confidence Score</span>
-                  <span class="font-bold text-brand" id="gauge-conf-val">85%</span>
-                </div>
-                <div class="progress-bar" style="height:6px;"><div class="progress-fill" id="gauge-conf-bar" style="width:85%;"></div></div>
-              </div>
-
-              <!-- Eye Contact % -->
-              <div>
-                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
-                  <span class="text-muted">Eye Contact Ratio</span>
-                  <span class="font-bold text-green" id="gauge-eye-val">92%</span>
-                </div>
-                <div class="progress-bar" style="height:6px;"><div class="progress-fill green" id="gauge-eye-bar" style="width:92%;"></div></div>
-              </div>
-
-              <!-- Speaking Pace WPM -->
-              <div class="flex items-center justify-between" style="font-size:0.75rem;padding:4px 8px;background:var(--surface-2);border-radius:var(--radius-sm);">
-                <span class="text-muted">Speaking Pace</span>
-                <span class="font-bold" id="gauge-wpm-val">Optimal (135 WPM)</span>
               </div>
             </div>
           </div>
@@ -505,6 +512,7 @@
 
         startTimer();
         document.getElementById('user-input').focus();
+        document.getElementById('voice-btn').disabled = false;
         Toast.success('Interview started! Good luck 🎯');
 
         if (document.getElementById('pressure-toggle').checked) {
@@ -518,6 +526,88 @@
       }
     }
 
+    // ── Voice-to-Text Dictation Engine ─────────────────────────────
+    let voiceRecognition = null;
+    let isVoiceDictating = false;
+
+    function toggleVoiceToText() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        Toast.error('Voice dictation is not supported in this browser. Try Chrome or Edge.');
+        return;
+      }
+
+      const voiceBtn = document.getElementById('voice-btn');
+      const voiceIcon = document.getElementById('voice-icon');
+      const voiceText = document.getElementById('voice-text');
+      const inputElem = document.getElementById('user-input');
+
+      if (isVoiceDictating) {
+        stopVoiceDictationUI();
+        if (voiceRecognition) {
+          try { voiceRecognition.stop(); } catch (e) {}
+        }
+        Toast.info('Voice dictation stopped.');
+        return;
+      }
+
+      try {
+        voiceRecognition = new SpeechRec();
+        voiceRecognition.continuous = true;
+        voiceRecognition.interimResults = true;
+        voiceRecognition.lang = 'en-US';
+
+        let baseVal = inputElem.value;
+        if (baseVal && !baseVal.endsWith(' ')) baseVal += ' ';
+
+        voiceRecognition.onresult = (event) => {
+          let textAcc = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            textAcc += event.results[i][0].transcript;
+          }
+          inputElem.value = baseVal + textAcc;
+        };
+
+        voiceRecognition.onerror = (e) => {
+          if (e.error === 'not-allowed') {
+            Toast.error('Microphone access denied. Please grant mic permissions in your browser.');
+            stopVoiceDictationUI();
+          }
+        };
+
+        voiceRecognition.onend = () => {
+          if (isVoiceDictating) {
+            try { voiceRecognition.start(); } catch (err) {}
+          } else {
+            stopVoiceDictationUI();
+          }
+        };
+
+        voiceRecognition.start();
+        isVoiceDictating = true;
+        voiceBtn.style.background = 'var(--red)';
+        voiceBtn.style.borderColor = 'var(--red)';
+        voiceBtn.style.color = '#fff';
+        voiceIcon.textContent = '🎙️';
+        voiceText.textContent = 'Listening...';
+        Toast.success('🎤 Speaking Mode Active! Speak into your mic to transcribe live...');
+      } catch (err) {
+        Toast.error('Failed to start voice input: ' + err.message);
+      }
+    }
+
+    function stopVoiceDictationUI() {
+      isVoiceDictating = false;
+      const voiceBtn = document.getElementById('voice-btn');
+      if (voiceBtn) {
+        voiceBtn.style.background = '';
+        voiceBtn.style.borderColor = '';
+        voiceBtn.style.color = '';
+        document.getElementById('voice-icon').textContent = '🎤';
+        document.getElementById('voice-text').textContent = 'Voice Input';
+      }
+    }
+
     // ── Send Message ───────────────────────────────────────────────
     async function sendMsg() {
       const input = document.getElementById('user-input');
@@ -528,6 +618,11 @@
       sendBtn.disabled = true;
       input.disabled = true;
       input.value = '';
+
+      if (isVoiceDictating) {
+        stopVoiceDictationUI();
+        if (voiceRecognition) try { voiceRecognition.stop(); } catch (e) {}
+      }
 
       addMessage('user', content);
       msgCount++;
@@ -591,6 +686,8 @@
 
       clearInterval(timerInterval);
       isRunning = false;
+      stopVoiceDictationUI();
+      if (voiceRecognition) try { voiceRecognition.stop(); } catch (e) {}
 
       // Extract media metrics & stop media streams
       let behavioralMetrics = null;
@@ -605,6 +702,7 @@
       endBtn.style.borderColor = '';
       endBtn.style.color = '';
       document.getElementById('send-btn').disabled = true;
+      document.getElementById('voice-btn').disabled = true;
       document.getElementById('user-input').disabled = true;
       document.getElementById('status-badge').textContent = '● Evaluating...';
 
