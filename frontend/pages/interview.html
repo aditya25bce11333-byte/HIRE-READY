@@ -93,6 +93,12 @@
             <span id="filler-chips"></span>
           </div>
 
+          <!-- Live Voice Dictation Status indicator -->
+          <div id="voice-status-bar" style="padding:6px 20px;border-top:1px solid var(--border);display:none;background:rgba(59,130,246,0.1);align-items:center;gap:8px;">
+            <span class="badge badge-brand" style="font-size:0.7rem;">🎙️ Live Voice Transcribing</span>
+            <span style="font-size:0.72rem;color:var(--text-3);" id="voice-live-snippet">Speak into your mic—your words will appear below in real-time.</span>
+          </div>
+
           <div class="chat-input-area">
             <textarea class="chat-input" id="user-input" rows="2"
               placeholder="Type or speak your answer... (Enter to send, Shift+Enter for new line)"
@@ -513,9 +519,11 @@
               if (micBar) micBar.style.height = `${m.volumeLevel}%`;
             },
             (transcriptText) => {
-              // Auto Voice-to-Text streaming: converts spoken words live into answer input box
+              // Zero-latency live voice transcribing into answer box
               if (inputElem && isRunning && !inputElem.disabled) {
                 inputElem.value = transcriptText;
+                const vsBar = document.getElementById('voice-status-bar');
+                if (vsBar) vsBar.style.display = 'flex';
               }
             }
           );
@@ -576,6 +584,8 @@
       if (window.mediaAnalyzer) {
         window.mediaAnalyzer.clearSpeechBuffer();
       }
+      const vsBar = document.getElementById('voice-status-bar');
+      if (vsBar) vsBar.style.display = 'none';
 
       addMessage('user', content);
       msgCount++;

@@ -19,7 +19,6 @@ class HireReadyMediaAnalyzer {
 
     // Speech Recognition & Live Dictation
     this.recognition = null;
-    this.spokenTextBuffer = '';
     this.speechStartTime = null;
     this.isAutoSpeechToText = true; // Enabled by default for hands-free mode
 
@@ -57,7 +56,6 @@ class HireReadyMediaAnalyzer {
     this.onUpdateCallback = onUpdateCallback;
     this.onTranscriptCallback = onTranscriptCallback;
     this.samples = [];
-    this.spokenTextBuffer = '';
 
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -82,7 +80,6 @@ class HireReadyMediaAnalyzer {
       return true;
     } catch (err) {
       console.warn('HireReady MediaAnalyzer camera/mic access denied or unavailable:', err.message);
-      // Fallback state if camera/mic is denied
       this.currentMetrics = {
         confidenceScore: 80,
         eyeContactPct: 90,
@@ -137,7 +134,7 @@ class HireReadyMediaAnalyzer {
   }
 
   /**
-   * Setup Web Speech API for live Voice-to-Text conversion & WPM calculation
+   * Setup Web Speech API for Ultra-Fast Zero-Latency Voice-to-Text Transcribing
    */
   initSpeechRecognition() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -150,31 +147,35 @@ class HireReadyMediaAnalyzer {
       this.recognition = new SpeechRec();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
+      this.recognition.maxAlternatives = 1;
       this.recognition.lang = 'en-US';
 
       this.recognition.onresult = (event) => {
+        let fullFinal = '';
         let currentInterim = '';
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            this.spokenTextBuffer += (this.spokenTextBuffer ? ' ' : '') + result[0].transcript.trim();
+        for (let i = 0; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            fullFinal += (fullFinal ? ' ' : '') + res[0].transcript.trim();
           } else {
-            currentInterim += result[0].transcript;
+            currentInterim += (currentInterim ? ' ' : '') + res[0].transcript.trim();
           }
         }
 
-        const combinedText = (this.spokenTextBuffer + (currentInterim ? ' ' + currentInterim : '')).trim();
+        const liveTranscript = (fullFinal + (currentInterim ? ' ' + currentInterim : '')).trim();
 
-        this.calculateWPM(combinedText);
+        this.calculateWPM(liveTranscript);
 
-        if (this.onTranscriptCallback && this.isAutoSpeechToText && combinedText) {
-          this.onTranscriptCallback(combinedText);
+        if (this.onTranscriptCallback && this.isAutoSpeechToText && liveTranscript) {
+          this.onTranscriptCallback(liveTranscript);
         }
       };
 
       this.recognition.onerror = (e) => {
-        console.warn('SpeechRecognition notice:', e.error);
+        if (e.error !== 'no-speech') {
+          console.warn('SpeechRecognition notice:', e.error);
+        }
       };
 
       this.recognition.onend = () => {
@@ -190,7 +191,11 @@ class HireReadyMediaAnalyzer {
   }
 
   clearSpeechBuffer() {
-    this.spokenTextBuffer = '';
+    if (this.recognition) {
+      try {
+        this.recognition.stop();
+      } catch (e) {}
+    }
   }
 
   calculateWPM(text) {
