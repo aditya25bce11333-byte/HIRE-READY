@@ -20,7 +20,10 @@ class HireReadyMediaAnalyzer {
     // Speech Recognition & Live Dictation
     this.recognition = null;
     this.speechStartTime = null;
-    this.isAutoSpeechToText = true; // Enabled by default for hands-free mode
+    this.isAutoSpeechToText = true;
+    this.committedTranscript = '';
+    this.speechRestartTimer = null;
+    this.isRecognitionActive = false;
 
     // Analysis Loop & Metrics
     this.animFrameId = null;
@@ -52,15 +55,19 @@ class HireReadyMediaAnalyzer {
    * @param {Function} onTranscriptCallback
    */
   async start(videoElem, onUpdateCallback, onTranscriptCallback) {
+    this.stop();
+
     this.videoElement = videoElem;
     this.onUpdateCallback = onUpdateCallback;
     this.onTranscriptCallback = onTranscriptCallback;
     this.samples = [];
+    this.committedTranscript = '';
+    this.isAutoSpeechToText = true;
 
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
-        audio: true
+        audio: { echoCancellation: true, noiseSuppression: true }
       });
 
       if (this.videoElement) {
@@ -69,8 +76,15 @@ class HireReadyMediaAnalyzer {
       }
 
       this.initAudioContext();
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        await this.audioCtx.resume();
+      }
+
       this.initSpeechRecognition();
       this.isActive = true;
+
+      // Defer speech start so getUserMedia + AudioContext settle first (avoids mic conflicts)
+      setTimeout(() => this.startSpeechRecognition(), 400);
 
       // Start video frame sampling
       this.analysisInterval = setInterval(() => {
@@ -143,58 +157,107 @@ class HireReadyMediaAnalyzer {
       return;
     }
 
+    if (this.recognition) {
+      this.recognition.onresult = null;
+      this.recognition.onerror = null;
+      this.recognition.onend = null;
+      this.recognition.onstart = null;
+      try { this.recognition.abort(); } catch (e) {}
+    }
+
     try {
       this.recognition = new SpeechRec();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
       this.recognition.maxAlternatives = 1;
-      this.recognition.lang = 'en-US';
+      this.recognition.lang = navigator.language || 'en-US';
+
+      this.recognition.onstart = () => {
+        this.isRecognitionActive = true;
+      };
 
       this.recognition.onresult = (event) => {
-        let fullFinal = '';
-        let currentInterim = '';
+        if (!this.isAutoSpeechToText) return;
 
-        for (let i = 0; i < event.results.length; i++) {
-          const res = event.results[i];
-          if (res.isFinal) {
-            fullFinal += (fullFinal ? ' ' : '') + res[0].transcript.trim();
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const text = result[0].transcript;
+          if (result.isFinal) {
+            this.committedTranscript += text;
           } else {
-            currentInterim += (currentInterim ? ' ' : '') + res[0].transcript.trim();
+            interimTranscript += text;
           }
         }
 
-        const liveTranscript = (fullFinal + (currentInterim ? ' ' + currentInterim : '')).trim();
-
+        const liveTranscript = (this.committedTranscript + interimTranscript).trim();
         this.calculateWPM(liveTranscript);
 
-        if (this.onTranscriptCallback && this.isAutoSpeechToText && liveTranscript) {
-          this.onTranscriptCallback(liveTranscript);
+        if (this.onTranscriptCallback) {
+          this.onTranscriptCallback(liveTranscript, interimTranscript.trim());
         }
       };
 
       this.recognition.onerror = (e) => {
-        if (e.error !== 'no-speech') {
-          console.warn('SpeechRecognition notice:', e.error);
+        this.isRecognitionActive = false;
+        if (e.error === 'no-speech' || e.error === 'aborted') return;
+        console.warn('SpeechRecognition notice:', e.error);
+        if (this.isActive && this.isAutoSpeechToText) {
+          this.scheduleSpeechRestart(600);
         }
       };
 
       this.recognition.onend = () => {
-        if (this.isActive) {
-          try { this.recognition.start(); } catch (e) {}
+        this.isRecognitionActive = false;
+        if (this.isActive && this.isAutoSpeechToText) {
+          this.scheduleSpeechRestart(300);
         }
       };
-
-      this.recognition.start();
     } catch (e) {
-      console.warn('SpeechRecognition start error:', e.message);
+      console.warn('SpeechRecognition init error:', e.message);
     }
   }
 
+  scheduleSpeechRestart(delayMs = 300) {
+    if (this.speechRestartTimer) clearTimeout(this.speechRestartTimer);
+    this.speechRestartTimer = setTimeout(() => {
+      this.speechRestartTimer = null;
+      if (this.isActive && this.isAutoSpeechToText) {
+        this.startSpeechRecognition();
+      }
+    }, delayMs);
+  }
+
+  startSpeechRecognition() {
+    if (!this.recognition || !this.isAutoSpeechToText || !this.isActive) return;
+    if (this.isRecognitionActive) return;
+
+    try {
+      this.recognition.start();
+    } catch (err) {
+      if (err.name === 'InvalidStateError') {
+        this.scheduleSpeechRestart(400);
+      } else {
+        console.warn('SpeechRecognition start error:', err);
+      }
+    }
+  }
+
+  resetSpeechTranscript() {
+    this.committedTranscript = '';
+    this.speechStartTime = null;
+  }
+
   clearSpeechBuffer() {
+    this.resetSpeechTranscript();
     if (this.recognition) {
       try {
         this.recognition.stop();
       } catch (e) {}
+    }
+    if (this.isActive && this.isAutoSpeechToText) {
+      this.scheduleSpeechRestart(350);
     }
   }
 
@@ -367,9 +430,15 @@ class HireReadyMediaAnalyzer {
 
   stop() {
     this.isActive = false;
+    this.isAutoSpeechToText = false;
+    if (this.speechRestartTimer) {
+      clearTimeout(this.speechRestartTimer);
+      this.speechRestartTimer = null;
+    }
     if (this.analysisInterval) clearInterval(this.analysisInterval);
     if (this.recognition) {
-      try { this.recognition.stop(); } catch (e) {}
+      try { this.recognition.abort(); } catch (e) {}
+      this.isRecognitionActive = false;
     }
     if (this.audioCtx) {
       try { this.audioCtx.close(); } catch (e) {}

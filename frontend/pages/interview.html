@@ -321,6 +321,7 @@
     let pasteAttempts = 0;
     let isRunning = false;
     let selectedRole = 'SDE';
+    let dictationPrefix = '';
 
     // Pre-set from URL params
     const params = new URLSearchParams(window.location.search);
@@ -518,13 +519,18 @@
               const micBar = document.getElementById('mic-level-bar');
               if (micBar) micBar.style.height = `${m.volumeLevel}%`;
             },
-            (transcriptText) => {
-              // Zero-latency live voice transcribing into answer box
-              if (inputElem && isRunning && !inputElem.disabled) {
-                inputElem.value = transcriptText;
-                const vsBar = document.getElementById('voice-status-bar');
-                if (vsBar) vsBar.style.display = 'flex';
-              }
+            (transcriptText, interimText) => {
+              if (!inputElem || !isRunning || inputElem.disabled) return;
+
+              const spokenText = transcriptText || interimText;
+              if (!spokenText) return;
+
+              inputElem.value = dictationPrefix + spokenText;
+
+              const vsBar = document.getElementById('voice-status-bar');
+              const snippet = document.getElementById('voice-live-snippet');
+              if (vsBar) vsBar.style.display = 'flex';
+              if (snippet) snippet.textContent = spokenText;
             }
           );
         }
@@ -548,26 +554,25 @@
     // ── Voice-to-Text Dictation Engine ─────────────────────────────
     function toggleVoiceToText() {
       if (!window.mediaAnalyzer) return;
-      window.mediaAnalyzer.isAutoSpeechToText = !window.mediaAnalyzer.isAutoSpeechToText;
+
+      window.mediaAnalyzer.isAutoSpeechToText = true;
+      window.mediaAnalyzer.resetSpeechTranscript();
+      dictationPrefix = document.getElementById('user-input').value.trim();
+      if (dictationPrefix) dictationPrefix += ' ';
+
+      window.mediaAnalyzer.startSpeechRecognition();
+
       const voiceBtn = document.getElementById('voice-btn');
       const voiceIcon = document.getElementById('voice-icon');
       const voiceText = document.getElementById('voice-text');
 
-      if (window.mediaAnalyzer.isAutoSpeechToText) {
-        voiceBtn.style.background = 'var(--red)';
-        voiceBtn.style.borderColor = 'var(--red)';
-        voiceBtn.style.color = '#fff';
-        voiceIcon.textContent = '🎙️';
-        voiceText.textContent = 'Voice Input: ON';
-        Toast.success('🎤 Live Voice Transcribing ACTIVE — speak into your mic!');
-      } else {
-        voiceBtn.style.background = '';
-        voiceBtn.style.borderColor = '';
-        voiceBtn.style.color = '';
-        voiceIcon.textContent = '🎤';
-        voiceText.textContent = 'Voice Paused';
-        Toast.info('Voice dictation paused.');
-      }
+      voiceBtn.style.background = 'var(--red)';
+      voiceBtn.style.borderColor = 'var(--red)';
+      voiceBtn.style.color = '#fff';
+      if (voiceIcon) voiceIcon.textContent = '🎙️';
+      if (voiceText) voiceText.textContent = 'Mic Active';
+
+      Toast.success('🎤 Mic Listening! Speak out loud into your microphone...');
     }
 
     // ── Send Message ───────────────────────────────────────────────
@@ -580,6 +585,7 @@
       sendBtn.disabled = true;
       input.disabled = true;
       input.value = '';
+      dictationPrefix = '';
 
       if (window.mediaAnalyzer) {
         window.mediaAnalyzer.clearSpeechBuffer();
@@ -622,6 +628,13 @@
     // Enter to send
     document.getElementById('user-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+    });
+
+    document.getElementById('user-input').addEventListener('input', (e) => {
+      if (!window.mediaAnalyzer?.isRecognitionActive) {
+        dictationPrefix = e.target.value;
+        if (window.mediaAnalyzer) window.mediaAnalyzer.resetSpeechTranscript();
+      }
     });
 
     // ── End Interview ──────────────────────────────────────────────
