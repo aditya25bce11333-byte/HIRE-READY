@@ -22,6 +22,17 @@ const evaluationSchema = new mongoose.Schema({
   improvementRoadmap: [String],
   feedback: String,
   trend: String,
+  behavioralMetrics: {
+    avgConfidence: { type: Number, default: 80 },
+    eyeContactPercentage: { type: Number, default: 85 },
+    avgWPM: { type: Number, default: 130 },
+    emotionDistribution: {
+      confident: { type: Number, default: 60 },
+      neutral: { type: Number, default: 30 },
+      hesitant: { type: Number, default: 10 }
+    },
+    nonVerbalFeedback: { type: String, default: '' }
+  },
   completedAt: { type: Date, default: Date.now },
 });
 

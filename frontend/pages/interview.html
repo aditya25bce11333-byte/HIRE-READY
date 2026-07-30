@@ -237,12 +237,60 @@
                 </div>
               </div>
             </div>
+          <!-- Webcam & AI Behavioral Suite Card -->
+          <div class="panel-card" id="media-card" style="display:none;">
+            <div class="flex items-center justify-between mb-2">
+              <h4 style="margin:0;font-size:0.85rem;font-weight:700;">🎥 AI Behavioral Suite</h4>
+              <span class="badge badge-green" id="cam-status" style="font-size:0.65rem;">● Live AI Feed</span>
+            </div>
+            
+            <!-- Video Feed Box -->
+            <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px;border:1px solid var(--border);">
+              <video id="webcam-preview" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+              <!-- Overlay dynamic metrics -->
+              <div style="position:absolute;bottom:6px;left:6px;right:6px;display:flex;justify-content:between;align-items:center;background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);padding:4px 8px;border-radius:var(--radius-sm);font-size:0.7rem;color:#fff;">
+                <span id="cam-emotion-badge">😊 Confident</span>
+                <span id="cam-eye-status" style="margin-left:auto;color:var(--green);font-weight:600;">Eye Contact: Focused</span>
+              </div>
+              <!-- Mic Volume Level Bar -->
+              <div style="position:absolute;top:8px;right:8px;width:6px;height:40px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;">
+                <div id="mic-level-bar" style="width:100%;height:0%;background:var(--green);position:absolute;bottom:0;transition:height 0.1s linear;"></div>
+              </div>
+            </div>
+
+            <!-- Real-time Gauges -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <!-- Dynamic Confidence Gauge -->
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
+                  <span class="text-muted">Dynamic Confidence Score</span>
+                  <span class="font-bold text-brand" id="gauge-conf-val">85%</span>
+                </div>
+                <div class="progress-bar" style="height:6px;"><div class="progress-fill" id="gauge-conf-bar" style="width:85%;"></div></div>
+              </div>
+
+              <!-- Eye Contact % -->
+              <div>
+                <div class="flex items-center justify-between" style="margin-bottom:3px;font-size:0.75rem;">
+                  <span class="text-muted">Eye Contact Ratio</span>
+                  <span class="font-bold text-green" id="gauge-eye-val">92%</span>
+                </div>
+                <div class="progress-bar" style="height:6px;"><div class="progress-fill green" id="gauge-eye-bar" style="width:92%;"></div></div>
+              </div>
+
+              <!-- Speaking Pace WPM -->
+              <div class="flex items-center justify-between" style="font-size:0.75rem;padding:4px 8px;background:var(--surface-2);border-radius:var(--radius-sm);">
+                <span class="text-muted">Speaking Pace</span>
+                <span class="font-bold" id="gauge-wpm-val">Optimal (135 WPM)</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </main>
   </div>
 
+  <script src="../js/media-analyzer.js"></script>
   <script src="../js/api.js"></script>
   <script>
     if (!Auth.requireAuth()) throw new Error();
@@ -415,6 +463,7 @@
         document.getElementById('timer-card').style.display = 'block';
         document.getElementById('ac-card').style.display = 'block';
         document.getElementById('stats-card').style.display = 'block';
+        document.getElementById('media-card').style.display = 'block';
         document.getElementById('end-btn').disabled = false;
         document.getElementById('user-input').disabled = false;
         document.getElementById('send-btn').disabled = false;
@@ -422,6 +471,37 @@
         document.getElementById('round-label').textContent = `${rounds[0]} Round`;
         document.getElementById('status-badge').textContent = '● Live';
         document.getElementById('status-badge').className = 'badge badge-green';
+
+        // Start AI Media & Behavioral Analyzer
+        const videoElem = document.getElementById('webcam-preview');
+        if (window.mediaAnalyzer) {
+          window.mediaAnalyzer.start(videoElem, (m) => {
+            const confVal = document.getElementById('gauge-conf-val');
+            const confBar = document.getElementById('gauge-conf-bar');
+            if (confVal) confVal.textContent = `${m.confidenceScore}%`;
+            if (confBar) confBar.style.width = `${m.confidenceScore}%`;
+
+            const eyeVal = document.getElementById('gauge-eye-val');
+            const eyeBar = document.getElementById('gauge-eye-bar');
+            if (eyeVal) eyeVal.textContent = `${m.eyeContactPct}%`;
+            if (eyeBar) eyeBar.style.width = `${m.eyeContactPct}%`;
+
+            const eyeStatus = document.getElementById('cam-eye-status');
+            if (eyeStatus) {
+              eyeStatus.textContent = m.eyeContactStatus;
+              eyeStatus.style.color = m.eyeContactPct >= 70 ? 'var(--green)' : 'var(--yellow)';
+            }
+
+            const emoBadge = document.getElementById('cam-emotion-badge');
+            if (emoBadge) emoBadge.textContent = m.facialEmotion;
+
+            const wpmVal = document.getElementById('gauge-wpm-val');
+            if (wpmVal) wpmVal.textContent = m.speechPaceStatus;
+
+            const micBar = document.getElementById('mic-level-bar');
+            if (micBar) micBar.style.height = `${m.volumeLevel}%`;
+          });
+        }
 
         startTimer();
         document.getElementById('user-input').focus();
@@ -512,6 +592,13 @@
       clearInterval(timerInterval);
       isRunning = false;
 
+      // Extract media metrics & stop media streams
+      let behavioralMetrics = null;
+      if (window.mediaAnalyzer) {
+        behavioralMetrics = window.mediaAnalyzer.getFinalMetrics();
+        window.mediaAnalyzer.stop();
+      }
+
       endBtn.disabled = true;
       endBtn.textContent = 'Evaluating...';
       endBtn.style.background = '';
@@ -522,7 +609,7 @@
       document.getElementById('status-badge').textContent = '● Evaluating...';
 
       try {
-        await api.post('/interview/end', { sessionId, duration: seconds });
+        await api.post('/interview/end', { sessionId, duration: seconds, behavioralMetrics });
         Toast.success('Interview complete! Redirecting to evaluation...');
         setTimeout(() => window.location.href = `evaluation.html?id=${sessionId}`, 1500);
       } catch (err) {
