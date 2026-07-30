@@ -1,7 +1,7 @@
 /**
  * HireReady Media & AI Behavioral Analyzer Module
  * Handles WebRTC MediaStream, Canvas-based Face & Eye Contact Tracking,
- * Web Audio API Volume/Dynamic analysis, and Web Speech WPM Pace Engine.
+ * Web Audio API Volume/Dynamic analysis, and Web Speech WPM Pace & Auto Voice-to-Text Engine.
  */
 
 class HireReadyMediaAnalyzer {
@@ -17,10 +17,11 @@ class HireReadyMediaAnalyzer {
     this.microphone = null;
     this.audioDataArray = null;
 
-    // Speech Recognition
+    // Speech Recognition & Live Dictation
     this.recognition = null;
     this.wordHistory = [];
     this.speechStartTime = null;
+    this.isAutoSpeechToText = true; // Auto Voice-to-Text active
 
     // Analysis Loop & Metrics
     this.animFrameId = null;
@@ -42,16 +43,19 @@ class HireReadyMediaAnalyzer {
     };
 
     this.onUpdateCallback = null;
+    this.onTranscriptCallback = null;
   }
 
   /**
    * Initialize and start media capture & analysis
    * @param {HTMLVideoElement} videoElem 
    * @param {Function} onUpdateCallback 
+   * @param {Function} onTranscriptCallback
    */
-  async start(videoElem, onUpdateCallback) {
+  async start(videoElem, onUpdateCallback, onTranscriptCallback) {
     this.videoElement = videoElem;
     this.onUpdateCallback = onUpdateCallback;
+    this.onTranscriptCallback = onTranscriptCallback;
     this.samples = [];
 
     try {
@@ -132,7 +136,7 @@ class HireReadyMediaAnalyzer {
   }
 
   /**
-   * Setup Web Speech API for Words Per Minute (WPM) calculation
+   * Setup Web Speech API for live Voice-to-Text conversion & WPM calculation
    */
   initSpeechRecognition() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -149,7 +153,12 @@ class HireReadyMediaAnalyzer {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
+
         this.calculateWPM(transcript);
+
+        if (this.onTranscriptCallback && this.isAutoSpeechToText && transcript.trim()) {
+          this.onTranscriptCallback(transcript);
+        }
       };
 
       this.recognition.onerror = (e) => {
@@ -177,7 +186,6 @@ class HireReadyMediaAnalyzer {
 
     if (elapsedMinutes > 0.05 && words.length > 0) {
       const calculatedWPM = Math.round(words.length / elapsedMinutes);
-      // Clamp realistic WPM range
       const wpm = Math.min(220, Math.max(60, calculatedWPM));
       this.currentMetrics.wpm = wpm;
 
@@ -206,7 +214,6 @@ class HireReadyMediaAnalyzer {
     const frame = this.ctx.getImageData(0, 0, vWidth, vHeight);
     const data = frame.data;
 
-    // Fast centroid skin color sampling to track head position & gaze alignment
     let totalSkinX = 0, totalSkinY = 0, skinPixelCount = 0;
     const step = 8;
 

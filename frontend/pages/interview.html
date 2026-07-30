@@ -481,33 +481,44 @@
 
         // Start AI Media & Behavioral Analyzer
         const videoElem = document.getElementById('webcam-preview');
+        const inputElem = document.getElementById('user-input');
+
         if (window.mediaAnalyzer) {
-          window.mediaAnalyzer.start(videoElem, (m) => {
-            const confVal = document.getElementById('gauge-conf-val');
-            const confBar = document.getElementById('gauge-conf-bar');
-            if (confVal) confVal.textContent = `${m.confidenceScore}%`;
-            if (confBar) confBar.style.width = `${m.confidenceScore}%`;
+          window.mediaAnalyzer.start(
+            videoElem,
+            (m) => {
+              const confVal = document.getElementById('gauge-conf-val');
+              const confBar = document.getElementById('gauge-conf-bar');
+              if (confVal) confVal.textContent = `${m.confidenceScore}%`;
+              if (confBar) confBar.style.width = `${m.confidenceScore}%`;
 
-            const eyeVal = document.getElementById('gauge-eye-val');
-            const eyeBar = document.getElementById('gauge-eye-bar');
-            if (eyeVal) eyeVal.textContent = `${m.eyeContactPct}%`;
-            if (eyeBar) eyeBar.style.width = `${m.eyeContactPct}%`;
+              const eyeVal = document.getElementById('gauge-eye-val');
+              const eyeBar = document.getElementById('gauge-eye-bar');
+              if (eyeVal) eyeVal.textContent = `${m.eyeContactPct}%`;
+              if (eyeBar) eyeBar.style.width = `${m.eyeContactPct}%`;
 
-            const eyeStatus = document.getElementById('cam-eye-status');
-            if (eyeStatus) {
-              eyeStatus.textContent = m.eyeContactStatus;
-              eyeStatus.style.color = m.eyeContactPct >= 70 ? 'var(--green)' : 'var(--yellow)';
+              const eyeStatus = document.getElementById('cam-eye-status');
+              if (eyeStatus) {
+                eyeStatus.textContent = m.eyeContactStatus;
+                eyeStatus.style.color = m.eyeContactPct >= 70 ? 'var(--green)' : 'var(--yellow)';
+              }
+
+              const emoBadge = document.getElementById('cam-emotion-badge');
+              if (emoBadge) emoBadge.textContent = m.facialEmotion;
+
+              const wpmVal = document.getElementById('gauge-wpm-val');
+              if (wpmVal) wpmVal.textContent = m.speechPaceStatus;
+
+              const micBar = document.getElementById('mic-level-bar');
+              if (micBar) micBar.style.height = `${m.volumeLevel}%`;
+            },
+            (transcriptText) => {
+              // Auto Voice-to-Text streaming: converts spoken words live into answer input box
+              if (inputElem && isRunning && !inputElem.disabled) {
+                inputElem.value = transcriptText;
+              }
             }
-
-            const emoBadge = document.getElementById('cam-emotion-badge');
-            if (emoBadge) emoBadge.textContent = m.facialEmotion;
-
-            const wpmVal = document.getElementById('gauge-wpm-val');
-            if (wpmVal) wpmVal.textContent = m.speechPaceStatus;
-
-            const micBar = document.getElementById('mic-level-bar');
-            if (micBar) micBar.style.height = `${m.volumeLevel}%`;
-          });
+          );
         }
 
         startTimer();
